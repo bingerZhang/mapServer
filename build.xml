@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="MapServer" default="Build" basedir=".">
+    <property name="productName" value="mapserver"/>
+    <property name="productVersion" value="1.0.0"/>
+    <property name="srcDir" location="./src/" />
+    <property name="binDir" location="./bin/" />
+    <property name="libDir" location="./lib/" />
+    <property name="jarDir" location="./jar/" />
+    <property name="package" value="com.launch" />
+    <property name="mainClass" value="Main" />
+    <property name="buildDir" location="./build/"/>
+
+    <path id="srcpath">
+        <pathelement location="${srcDir}"/>
+        <!--<pathelement location="./module/src"/>-->
+    </path>
+
+    <path id="resourcepath">
+        <fileset dir="${srcDir}">
+            <exclude name="**/*.java"/>
+        </fileset>
+    </path>
+    <path id="classpath">
+        <fileset dir="${libDir}">
+            <include name="*.jar"/>
+        </fileset>
+        <!--<fileset dir="${webapp.dir}/WEB-INF/lib">-->
+            <!--<include name="*.jar"/>-->
+        <!--</fileset>-->
+    </path>
+
+    <target name="Init">
+        <delete dir="${buildDir}" />
+        <mkdir dir="${buildDir}" />
+    </target>
+    <target name="Compile" depends="Init">
+        <mkdir dir="${buildDir}"/>
+        <mkdir dir="${buildDir}/classes"/>
+        <mkdir dir="${buildDir}/lib"/>
+        <javac destdir="${buildDir}/classes" encoding="UTF-8" debug="on" nowarn="on" includeantruntime="false">
+            <src refid="srcpath"/>
+            <classpath refid="classpath"/>
+        </javac>
+        <copy todir="${buildDir}/classes">
+            <path refid="resourcepath"/>
+        </copy>
+        <!--<javac srcdir="${srcDir}" destdir="${binDir}" />-->
+    </target>
+    <target name="MakeJar" depends="Init,Compile">
+        <jar destfile="${buildDir}/${productName}.jar" basedir="${buildDir}/classes" update="true">
+            <zipgroupfileset dir="${libDir}" includes="*.jar"/>
+            <manifest>
+                <attribute name="Main-Class"
+                           value="${package}.${mainClass}" />
+            </manifest>
+        </jar>
+    </target>
+    <target name="Build" depends="Init,Compile,MakeJar">
+        <echo message="Ant is building the project." />
+        <delete dir="${buildDir}/classes" />
+        <delete dir="${buildDir}/lib" />
+    </target>
+</project>
