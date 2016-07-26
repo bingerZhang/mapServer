@@ -22,6 +22,7 @@ public class Application {
     public static final String TEMP_PATH;
     public static final String OS_NAME;
     private static Logger logger = Logger.getLogger("Application");
+    public static List<List<String>>  MapInfo = null;
 
     static {
         ROOT_PATH = System.getProperty("application.home", "/opt/tracker");
@@ -154,5 +155,11 @@ public class Application {
             setProperties(PropertiesUtils.getProperties(applicationFile));
         }
     }
-
+    public static String getAppServer(){
+        String host = Application.getProperty("application.host");
+        if (host == null) {
+            return "127.0.0.1";
+        }
+        return host;
+    }
 }

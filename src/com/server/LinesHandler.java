@@ -1,7 +1,7 @@
 package com.server;
 
 import com.launch.Application;
-import com.launch.Main;
+import com.launch.MapServer;
 import com.map.Parser;
 import com.map.Point;
 import com.sun.net.httpserver.HttpExchange;
@@ -29,7 +29,7 @@ public class LinesHandler extends ProxyHandler {
         String query = url.getQuery();
         String jpc = Utils.findParamValue(query,"jpc");
         Parser parser = Parser.getInstance();
-        Map<String, List<List<Point>>> listMap = parser.getLines(Main.MapInfo,"^[SGX].+");
+        Map<String, List<List<Point>>> listMap = parser.getLines(Application.MapInfo,"^[SGX].+");
         logger.info("listMap size: " + listMap.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
@@ -57,6 +57,7 @@ public class LinesHandler extends ProxyHandler {
             lines.put(line);
         }
         json.put("lines",lines);
+        json.put("status","ok");
         String res = json.toString();
         res = "/**/ typeof "+ jpc + " === 'function' && " + jpc + "(" + res + ");";
         response(exchange,200,res);
