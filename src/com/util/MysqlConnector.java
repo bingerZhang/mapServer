@@ -14,7 +14,7 @@ public class MysqlConnector {
     String db_pwd = "root";
 
     // connect to MySQL
-    void connSQL() {
+    public void connSQL() {
         String url = "jdbc:mysql://"+ db_host + ":3306/hello?characterEncoding=UTF-8";
 
         try {
@@ -35,7 +35,7 @@ public class MysqlConnector {
     }
 
     // disconnect to MySQL
-    void deconnSQL() {
+    public void disconnSQL() {
         try {
             if (conn != null)
                 conn.close();
@@ -46,7 +46,7 @@ public class MysqlConnector {
     }
 
     // execute selection language
-    ResultSet selectSQL(String sql) {
+    public ResultSet selectSQL(String sql) {
         ResultSet rs = null;
         try {
             statement = conn.prepareStatement(sql);
@@ -58,7 +58,7 @@ public class MysqlConnector {
     }
 
     // execute insertion language
-    boolean insertSQL(String sql) {
+    public boolean insertSQL(String sql) {
         try {
             statement = conn.prepareStatement(sql);
             statement.executeUpdate();
@@ -115,7 +115,7 @@ public class MysqlConnector {
     }
 
     //execute delete language
-    boolean deleteSQL(String sql) {
+    public boolean deleteSQL(String sql) {
         try {
             statement = conn.prepareStatement(sql);
             statement.executeUpdate();
@@ -131,7 +131,7 @@ public class MysqlConnector {
     }
 
     //execute update language
-    boolean updateSQL(String sql) {
+    public boolean updateSQL(String sql) {
         try {
             statement = conn.prepareStatement(sql);
             statement.executeUpdate();
@@ -147,7 +147,7 @@ public class MysqlConnector {
     }
 
     // show data in ju_users
-    void layoutStyle2(ResultSet rs) {
+    public void layoutStyle2(ResultSet rs) {
         System.out.println("-----------------");
         System.out.println("执行结果如下所示:");
         System.out.println("-----------------");
@@ -194,7 +194,7 @@ public class MysqlConnector {
             mysqlConnector.layoutStyle2(resultSet);
         }
 
-        mysqlConnector.deconnSQL();
+        mysqlConnector.disconnSQL();
     }
 }
 

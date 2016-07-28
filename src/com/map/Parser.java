@@ -1,5 +1,7 @@
 package com.map;
 
+import com.util.MysqlConnector;
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -111,16 +113,18 @@ public class Parser {
     public static boolean csvToDB(String file) throws IOException {
         InputStreamReader fr = new InputStreamReader(new FileInputStream(file));
         BufferedReader br = new BufferedReader(fr);
-        String rec = null;// 一行
-        String str;// 一个单元格
-        List<List<String>> listFile = new ArrayList<List<String>>();
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        String prefix = "INSERT INTO motorway(name, rid, pointx,pointy) VALUES ";
+        String line = null;// 一行
         try {
             // 读取一行
-            while ((rec = br.readLine()) != null) {
+            List<String> values = new ArrayList<String>();
+            while ((line = br.readLine()) != null) {
 //                    Pattern pCells = Pattern
 //                            .compile("(\"[^\"]*(\"{2})*[^\"]*\")*[^,]*,");
 //                    Matcher mCells = pCells.matcher(rec);
-                List<String> cells = new ArrayList<String>();// 每行记录一个list
+//                List<String> cells = new ArrayList<String>();// 每行记录一个list
 //                    // 读取每个单元格
 //                    while (mCells.find()) {
 //                        str = mCells.group();
@@ -132,11 +136,26 @@ public class Parser {
 
 //                    listFile.add(cells);
 //                    String[] list = rec.split(",");
-                StringTokenizer token = new StringTokenizer(rec, " ,");
+                StringTokenizer token = new StringTokenizer(line, " ,");
+                int i=0;
+                StringBuilder value_b = null;
                 while (token.hasMoreTokens()) {
-                    cells.add(token.nextToken());
+                    if(i==0 || i==4 || i==5 || i==6){
+                        value_b.append("'" + token.nextToken() +"',");
+                    }
+                    i++;
                 }
-                listFile.add(cells);
+                String value = value_b.toString();
+                values.add(value.substring(0,value.length()-1));
+                if(values.size()> 10000){
+                    boolean ret = mysqlConnector.insert_SQLS(prefix,values);
+                    if(ret){
+                        values = new ArrayList<String>();
+                    }else {
+                        System.out.println("insert failed !");
+                        Thread.sleep(2000);
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -148,8 +167,11 @@ public class Parser {
             if (br != null) {
                 br.close();
             }
+            if(mysqlConnector!=null) {
+                mysqlConnector.disconnSQL();
+            }
         }
-        System.out.println("csv point size: " + listFile.size());
+        System.out.println("csvToDB Done!");
         return true;
     }
 
