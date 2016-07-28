@@ -1,6 +1,7 @@
 package com.util;
 
 import java.sql.*;
+import java.util.List;
 
 /**
  * Created by Administrator on 2016/7/28.
@@ -70,6 +71,47 @@ public class MysqlConnector {
             e.printStackTrace();
         }
         return false;
+    }
+
+
+    public boolean insert_SQLS(String prefix,List<String> values) {
+
+        int size = 0;
+        // sql前缀
+//        String prefix = "INSERT INTO tb_big_data (count, create_time, random) VALUES ";
+        try {
+            // 保存sql后缀
+            StringBuffer suffix = new StringBuffer();
+            // 设置事务为非自动提交
+            conn.setAutoCommit(false);
+            // Statement st = conn.createStatement();
+            // 比起st，pst会更好些
+            PreparedStatement pst = conn.prepareStatement("");
+            // 外层循环，总提交事务次数
+            size = values.size();
+
+            for (int j = 0; j <= size; j++) {
+                // 构建sql后缀
+                suffix.append("(" + values.get(j) + "),");
+            }
+            // 构建完整sql
+            String sql = prefix + suffix.substring(0, suffix.length() - 1);
+            // 添加执行sql
+            pst.addBatch(sql);
+            // 执行操作
+            pst.executeBatch();
+            // 提交事务
+            conn.commit();
+
+            pst.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        System.out.println("insert size : " + size);
+        return true;
     }
 
     //execute delete language
