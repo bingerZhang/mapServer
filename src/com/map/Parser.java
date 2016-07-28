@@ -1,10 +1,7 @@
 package com.map;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,17 +27,24 @@ public class Parser {
             try {
                 // 读取一行
                 while ((rec = br.readLine()) != null) {
-                    Pattern pCells = Pattern
-                            .compile("(\"[^\"]*(\"{2})*[^\"]*\")*[^,]*,");
-                    Matcher mCells = pCells.matcher(rec);
+//                    Pattern pCells = Pattern
+//                            .compile("(\"[^\"]*(\"{2})*[^\"]*\")*[^,]*,");
+//                    Matcher mCells = pCells.matcher(rec);
                     List<String> cells = new ArrayList<String>();// 每行记录一个list
-                    // 读取每个单元格
-                    while (mCells.find()) {
-                        str = mCells.group();
-                        str = str.replaceAll(
-                                "(?sm)\"?([^\"]*(\"{2})*[^\"]*)\"?.*,", "$1");
-                        str = str.replaceAll("(?sm)(\"(\"))", "$2");
-                        cells.add(str);
+//                    // 读取每个单元格
+//                    while (mCells.find()) {
+//                        str = mCells.group();
+//                        str = str.replaceAll(
+//                                "(?sm)\"?([^\"]*(\"{2})*[^\"]*)\"?.*,", "$1");
+//                        str = str.replaceAll("(?sm)(\"(\"))", "$2");
+//                        cells.add(str);
+//                    }
+
+//                    listFile.add(cells);
+//                    String[] list = rec.split(",");
+                    StringTokenizer token = new StringTokenizer(rec, " ,");
+                    while (token.hasMoreTokens()) {
+                        cells.add(token.nextToken());
                     }
                     listFile.add(cells);
                 }
@@ -60,8 +64,11 @@ public class Parser {
         public List<List<String>> filter(List<List<String>> allPoints){
             List<List<String>> lists = new ArrayList<List<String>>();
             for(List<String> point: allPoints){
-                String name = point.get(5);
-                if(name.trim().length()>2){
+                String name = point.get(1);
+                String road_id = point.get(4);
+                if(name.trim().length()>0){
+                     lists.add(point);
+                }else if(road_id.trim().length()>0){
                      lists.add(point);
                 }
             }
@@ -70,8 +77,11 @@ public class Parser {
         public Map<String, List<List<Point>>> getLines(List<List<String>> allPoints,String reg){
             Map<String, List<Point>> lines = new HashMap<String, List<Point>>();
             for(List<String> point: allPoints){
-                 String name = point.get(5);
-                if(name.matches(reg)&&!name.contains("/")){
+                 String name = point.get(1);
+                 if(name.trim().length()==0){
+                    name = point.get(4);
+                 }
+//                if(name.matches(reg)&&!name.contains("/")){
                     List<Point> points = null;
                     if(lines.containsKey(name)){
                         points = lines.get(name);
@@ -79,16 +89,16 @@ public class Parser {
                         points = new ArrayList<Point>();
                     }
                     int size = points.size();
-                    Point point1 = new Point(Double.valueOf(point.get(20)),Double.valueOf(point.get(21)),0d,size + 1);
+                    Point point1 = new Point(Double.valueOf(point.get(5)),Double.valueOf(point.get(6)),0d,size + 1);
                     points.add(point1);
                     lines.put(name,points);
-                }
+
             }
             Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
             for (Map.Entry<String, List<Point>> entry : lines.entrySet()) {
                 String name = entry.getKey();
                 List<Point> points= entry.getValue();
-                List<List<Point>> list = MapUtil.adjustment(points,0.8d);
+                List<List<Point>> list = MapUtil.adjustment(points,2d);
                 retlines.put(name,list);
             }
             return retlines;

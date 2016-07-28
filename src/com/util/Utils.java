@@ -1,5 +1,7 @@
 package com.util;
 
+import com.map.Point;
+
 /**
  * Created by zlb on 2016/7/22.
  */
@@ -34,4 +36,5 @@ public class Utils {
             }
         }
     }
+
 }

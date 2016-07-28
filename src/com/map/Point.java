@@ -9,21 +9,31 @@ public class Point {
     Double point_x;
     Double point_y;
     Double point_z;
-    int id;
+    int point_id;
     int preid = 0;
     double predis = 0;
     int nextid=0;
     double nextdis = 0;
 
+    int ws_id; //weather_station id
+
     Point(){
 
     }
 
-    public Point(Double point_x, Double point_y, Double point_z, int id) {
+    public Point(Double point_x, Double point_y, Double point_z, int point_id) {
         this.point_x = point_x;
         this.point_y = point_y;
         this.point_z = point_z;
-        this.id = id;
+        this.point_id = point_id;
+    }
+
+    public int getWs_id() {
+        return ws_id;
+    }
+
+    public void setWs_id(int ws_id) {
+        this.ws_id = ws_id;
     }
 
     public double getPredis() {
@@ -59,11 +69,11 @@ public class Point {
     }
 
     public int getId() {
-        return id;
+        return point_id;
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.point_id = id;
     }
 
     public Double getPoint_x() {
@@ -88,5 +98,15 @@ public class Point {
 
     public void setPoint_y(Double point_y) {
         this.point_y = point_y;
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("ID: " + point_id + "  ");
+        sb.append("PX: " + point_x + "  ");
+        sb.append("PY: " + point_y + "  ");
+        sb.append("WSPID: " + ws_id );
+        return sb.toString();
     }
 }

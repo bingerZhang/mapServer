@@ -71,12 +71,67 @@ public class MapUtil {
         }
         return obj;
     }
-    public static void main(String[] args) {
-        double lng1=116.829; //jingdu
-        double lat1=40.595;  //weidu
 
-        double lng2=116.830;
-        double lat2=40.599;
-        System.out.println("distance: " + getDistance(lat1,lng1,lat2,lng2));
+    public static double distance2(Point a, Point b){
+        Double ax = a.getPoint_x();
+        Double ay = a.getPoint_y();
+        Double bx = b.getPoint_x();
+        Double by = b.getPoint_y();
+        return (ax-bx)*(ax-bx)+(ay-by)*(ay-by);  // 取平方
+    }
+
+    public static Point nearByPoint(List<Point> points, Point a){
+        Point ret = null;
+        Double distance2 = 0d;
+        boolean first = true;
+        for(Point p:points){
+            Double dt = distance2(p,a);
+            if(first){
+                distance2=dt;
+                ret = p;
+                first =false;
+            }else if(distance2 > dt){
+                distance2 = dt;
+                ret = p;
+            }
+        }
+        return ret;
+    }
+
+    public static void updatePointInfo(List<Point> pointList,List<Point> wsplist){
+        int size = pointList.size();
+        for(int i=0;i<size;i++){
+            Point a = pointList.get(i);
+            Point wsp = nearByPoint(wsplist,a);
+            a.setWs_id(wsp.getId());
+        }
+    }
+
+
+    public static void main(String[] args) {
+        double lng1=115; //jingdu
+        double lat1=40;  //weidu
+
+        double lng2=119;
+        double lat2=40;
+        List<Point> list = new ArrayList<>();
+        list.add(new Point(lat1,lng1,0d,1));
+        list.add(new Point(lat2,lng2,0d,2));
+        list.add(new Point(41d,117d,0d,3));
+        list.add(new Point(42d,118d,0d,4));
+        System.out.println("before:");
+        for(Point p: list){
+            System.out.println(p.toString());
+        }
+        List<Point> wsl = new ArrayList<>();
+        wsl.add(new Point(42d,118d,0d,40));
+        wsl.add(new Point(41.9d,118d,0d,50));
+        wsl.add(new Point(41.5d,118d,0d,60));
+        updatePointInfo(list,wsl);
+        System.out.println("after:");
+        for(Point p: list){
+            System.out.println(p.toString());
+        }
+
     }
 }
