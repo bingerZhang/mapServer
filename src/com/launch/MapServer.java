@@ -42,6 +42,7 @@ public class MapServer implements Main {
 //        }
 //        logger.info("map info list size: " + Application.MapInfo.size());
 
+        logger.info("Started, loading....");
         Application.motorwayInfo = MapUtil.loadRoadInfo("motorway");
         logger.info("motorway road count: " + Application.motorwayInfo.size());
 
