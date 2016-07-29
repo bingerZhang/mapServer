@@ -45,12 +45,46 @@ public class MapUtil {
             Point b = pointList.get(i+1);
             if(getDistance(a,b)>maxdistance){
                 List<Point> newlist = pointList.subList(start,i+1);
-                lists.add(newlist);
+                List<Point> relist = reduce(newlist);
+                if(relist.size()>0)lists.add(newlist);
                 start = i+1;
             }
         }
-        if(start < size-1)lists.add(pointList.subList(start,size));
+        if(start < size-1){
+            List<Point> newlist = pointList.subList(start,size);
+            List<Point> relist = reduce(newlist);
+            if(relist.size()>0)lists.add(newlist);
+        }
         return lists;
+    }
+
+    public static List<Point> reduce(List<Point> points){
+        List<Point> newlist = new ArrayList<>();
+        int size = points.size();
+        int fact = 1;
+        if(size>200){
+            fact=50;
+        }else if(size > 50){
+            fact=30;
+        }else if(size>20){
+            fact=20;
+//        }else if(size>8){
+//            fact=5;
+        }else {
+            fact=1;
+        }
+        if(size>1) {
+            if (fact == 1) {
+                newlist.add(points.get(0));
+                newlist.add(points.get(size - 1));
+            }else {
+                for(int i = 0;i<size;i++){
+                    if(i%fact==0)newlist.add(points.get(i));
+                }
+                if((size-1)%fact>0)newlist.add(points.get(size-1));
+            }
+        }
+        return newlist;
     }
 
     public static void writeObject(File file,Object object) {
@@ -151,7 +185,7 @@ public class MapUtil {
 
     public static Map<String,List<Point>> loadRoadInfo(String table){
         Map<String,List<Point>> mapinfo = new HashMap<>();
-        String s = "select * from " + table;
+        String s = "select * from " + table + " where name like 'G%'";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         ResultSet rs = mysqlConnector.query(s);

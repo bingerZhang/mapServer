@@ -115,7 +115,7 @@ public class Parser {
             for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
                 String name = entry.getKey();
                 List<Point> points= entry.getValue();
-                List<List<Point>> list = MapUtil.adjustment(points,2d);
+                List<List<Point>> list = MapUtil.adjustment(points,15d);
                 retlines.put(name,list);
             }
             return retlines;

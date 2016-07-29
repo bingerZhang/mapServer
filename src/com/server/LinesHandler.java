@@ -31,17 +31,19 @@ public class LinesHandler extends ProxyHandler {
         Parser parser = Parser.getInstance();
 //        Map<String, List<List<Point>>> listMap = parser.getLines(Application.MapInfo,"^[SGX].+");
 
-        logger.info("listMap size: " + Application.motorwaylines.size());
+        logger.info("motorwaylines size: " + Application.motorwaylines.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
-
+        int count = 0;
         for (Map.Entry<String, List<List<Point>>> entry : Application.motorwaylines.entrySet()) {
+
             JSONObject line = new JSONObject();
             String name = entry.getKey();
             line.put("name",name);
             JSONArray segs = new JSONArray();
             List<List<Point>> pointslist = entry.getValue();
             int size = pointslist.size();
+            count = count + size;
             for(int i=0;i<size;i++) {
                 List<Point> points = pointslist.get(i);
                 JSONObject pointobj = new JSONObject();
@@ -58,6 +60,7 @@ public class LinesHandler extends ProxyHandler {
             line.put("segs",segs);
             lines.put(line);
         }
+        logger.info("points count: " + count);
         json.put("lines",lines);
         json.put("status","ok");
         String res = json.toString();
