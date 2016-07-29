@@ -2,6 +2,7 @@ package com.launch;
 
 import com.map.MapUtil;
 import com.map.Parser;
+import com.map.Point;
 import com.server.TrackerServer;
 import com.util.PropertiesUtils;
 import com.util.StringUtils;
@@ -23,6 +24,7 @@ public class Application {
     public static final String OS_NAME;
     private static Logger logger = Logger.getLogger("Application");
     public static List<List<String>>  MapInfo = null;
+    public static Map<String,List<Point>> motorwayInfo = null;
 
     static {
         ROOT_PATH = System.getProperty("application.home", "/opt/tracker");

@@ -3,6 +3,7 @@ package com.server;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 public abstract class ProxyHandler implements HttpHandler {
-
+    private static Logger logger = Logger.getLogger("ProxyHandler");
     protected ProxyHandler() {
     }
 
@@ -22,6 +23,7 @@ public abstract class ProxyHandler implements HttpHandler {
         try {
             logicalhandle(exchange);
         } catch (Throwable e) {
+            logger.error(e.getMessage());
             byte[] error = "Invalid Request".getBytes();
             exchange.sendResponseHeaders(500, error.length);
             OutputStream outputStream = exchange.getResponseBody();

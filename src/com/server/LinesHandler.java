@@ -29,10 +29,12 @@ public class LinesHandler extends ProxyHandler {
         String query = url.getQuery();
         String jpc = Utils.findParamValue(query,"jpc");
         Parser parser = Parser.getInstance();
-        Map<String, List<List<Point>>> listMap = parser.getLines(Application.MapInfo,"^[SGX].+");
+//        Map<String, List<List<Point>>> listMap = parser.getLines(Application.MapInfo,"^[SGX].+");
+        Map<String, List<List<Point>>> listMap =parser.getRoadsInfo(Application.motorwayInfo);
         logger.info("listMap size: " + listMap.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
+
         for (Map.Entry<String, List<List<Point>>> entry : listMap.entrySet()) {
             JSONObject line = new JSONObject();
             String name = entry.getKey();

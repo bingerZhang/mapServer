@@ -1,9 +1,14 @@
 package com.map;
 
+import com.util.MysqlConnector;
+
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zlb on 2016/7/19.
@@ -72,6 +77,7 @@ public class MapUtil {
         return obj;
     }
 
+    //粗略计算
     public static double distance2(Point a, Point b){
         Double ax = a.getPoint_x();
         Double ay = a.getPoint_y();
@@ -107,31 +113,115 @@ public class MapUtil {
         }
     }
 
+    public static void syncPointInfoToDB(Map<String,List<Point>> roadInfo){
+        String prefix = "UPDATE motorway SET wsp_id = CASE id ";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        boolean ret = true;
+        for(String key: roadInfo.keySet()){
+            List<Point> list = roadInfo.get(key);
+            String sql = new String(prefix);
+            int count = 0;
+            String where = "where id in (";
+            for(Point point: list){
+                sql = sql + " WHEN " + point.getId() + " THEN " + point.getWs_id();
+                count++;
+                where = where + point.getId() + ",";
+                if(count>500){
+                    sql = sql + " END\n" ;
+                    sql = sql + where.substring(0,where.length()-1)+ ")";
+                    ret = mysqlConnector.updateSQL(sql);
+                    sql= new String(prefix);
+                    count=0;
+                    where = "where id in (";
+                    if(!ret)break;
+                }
+
+            }
+            if (!ret) break;
+            if(count>0) {
+                sql = sql + " END\n";
+                sql = sql + where.substring(0,where.length()-1)+ ")";
+                ret = mysqlConnector.updateSQL(sql);
+                if (!ret) break;
+            }
+            if (!ret) break;
+        }
+    }
+
+    public static Map<String,List<Point>> loadRoadInfo(String table){
+        Map<String,List<Point>> mapinfo = new HashMap<>();
+        String s = "select * from " + table;
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String name = rs.getString(2);
+                String road_id = rs.getString(3);
+                if(name==null||name.trim().length()==0)name = road_id.trim();
+                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7));
+                List<Point> points = null;
+                if(mapinfo.containsKey(name)){
+                    points = mapinfo.get(name);
+                    points.add(point);
+                }else {
+                    points = new ArrayList<>();
+                    points.add(point);
+                    mapinfo.put(name, points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null){
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return mapinfo;
+    }
+    public static List<Point> loadWSInfo(){
+        List<Point> wspinfo = new ArrayList<>();
+        String s = "select * from town_location";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String name = rs.getString(2);
+                String road_id = rs.getString(3);
+                if(name==null||name.trim().length()==0)name = road_id.trim();
+                Point point = new Point(rs.getInt(1),rs.getDouble(4),rs.getDouble(3),0d,rs.getInt(1));
+                wspinfo.add(point);
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null)
+            {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return wspinfo;
+    }
 
     public static void main(String[] args) {
-        double lng1=115; //jingdu
-        double lat1=40;  //weidu
+        Map<String,List<Point>> motorwayInfo = loadRoadInfo("motorway");
+        System.out.println("motorway road count: " + motorwayInfo.size());
 
-        double lng2=119;
-        double lat2=40;
-        List<Point> list = new ArrayList<>();
-        list.add(new Point(lat1,lng1,0d,1));
-        list.add(new Point(lat2,lng2,0d,2));
-        list.add(new Point(41d,117d,0d,3));
-        list.add(new Point(42d,118d,0d,4));
-        System.out.println("before:");
-        for(Point p: list){
-            System.out.println(p.toString());
+        List<Point> wspInfo = loadWSInfo();
+        System.out.println("weather station count: " + wspInfo.size());
+
+        for(String key:motorwayInfo.keySet()){
+            List<Point> points = motorwayInfo.get(key);
+            updatePointInfo(points,wspInfo);
         }
-        List<Point> wsl = new ArrayList<>();
-        wsl.add(new Point(42d,118d,0d,40));
-        wsl.add(new Point(41.9d,118d,0d,50));
-        wsl.add(new Point(41.5d,118d,0d,60));
-        updatePointInfo(list,wsl);
-        System.out.println("after:");
-        for(Point p: list){
-            System.out.println(p.toString());
-        }
+        syncPointInfoToDB(motorwayInfo);
+        System.out.println("Done");
 
     }
 }
