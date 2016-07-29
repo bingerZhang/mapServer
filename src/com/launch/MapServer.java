@@ -2,12 +2,14 @@ package com.launch;
 
 import com.map.MapUtil;
 import com.map.Parser;
+import com.map.Point;
 import com.server.TrackerServer;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class MapServer implements Main {
 //public class MapServer {
@@ -43,8 +45,9 @@ public class MapServer implements Main {
 //        logger.info("map info list size: " + Application.MapInfo.size());
 
         logger.info("Started, loading....");
-        Application.motorwayInfo = MapUtil.loadRoadInfo("motorway");
-        logger.info("motorway road count: " + Application.motorwayInfo.size());
+//        Application.motorwayInfo = MapUtil.loadRoadInfo("motorway");
+        Application.motorwaylines =parser.getRoadsInfo("motorway");
+        logger.info("motorway road count: " + Application.motorwaylines.size());
 
         TrackerServer.startServer();
     }

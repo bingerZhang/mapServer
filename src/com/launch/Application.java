@@ -23,8 +23,9 @@ public class Application {
     public static final String TEMP_PATH;
     public static final String OS_NAME;
     private static Logger logger = Logger.getLogger("Application");
-    public static List<List<String>>  MapInfo = null;
-    public static Map<String,List<Point>> motorwayInfo = null;
+//    public static List<List<String>>  MapInfo = null;
+//    public static Map<String,List<Point>> motorwayInfo = null;
+    public static Map<String, List<List<Point>>> motorwaylines = null;
 
     static {
         ROOT_PATH = System.getProperty("application.home", "/opt/tracker");

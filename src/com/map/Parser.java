@@ -1,6 +1,7 @@
 package com.map;
 
 import com.util.MysqlConnector;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
  * Created by zlb on 2016/7/19.
  */
 public class Parser {
-
+    private static Logger logger = Logger.getLogger("Parser");
         public static Parser parser = null;
         public static Parser getInstance(){
                 if(parser == null)parser = new Parser();
@@ -107,7 +108,9 @@ public class Parser {
             return retlines;
         }
 
-        public Map<String, List<List<Point>>> getRoadsInfo(Map<String,List<Point>> roadsInfo) {
+        public Map<String, List<List<Point>>> getRoadsInfo(String table) {
+            Map<String,List<Point>> roadsInfo = MapUtil.loadRoadInfo(table);
+            logger.info("Road data load done!");
             Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
             for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
                 String name = entry.getKey();
@@ -117,7 +120,6 @@ public class Parser {
             }
             return retlines;
         }
-
 
     /**
      * 解析csv文件 到一个list中 每个单元个为一个String类型记录，每一行为一个list。 再将所有的行放到一个总list中
