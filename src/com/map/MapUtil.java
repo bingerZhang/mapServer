@@ -46,14 +46,14 @@ public class MapUtil {
             if(getDistance(a,b)>maxdistance){
                 List<Point> newlist = pointList.subList(start,i+1);
                 List<Point> relist = reduce(newlist);
-                if(relist.size()>0)lists.add(newlist);
+                if(relist.size()>0)lists.add(relist);
                 start = i+1;
             }
         }
         if(start < size-1){
             List<Point> newlist = pointList.subList(start,size);
             List<Point> relist = reduce(newlist);
-            if(relist.size()>0)lists.add(newlist);
+            if(relist.size()>0)lists.add(relist);
         }
         return lists;
     }
@@ -62,13 +62,13 @@ public class MapUtil {
         List<Point> newlist = new ArrayList<>();
         int size = points.size();
         int fact = 1;
-        if(size>200){
-            fact=50;
-        }else if(size > 50){
-            fact=30;
-        }else if(size>20){
-            fact=20;
-//        }else if(size>8){
+        if(size>500){
+            fact=500;
+//        }else if(size > 300){
+//            fact=300;
+//        }else if(size>50){
+//            fact=30;
+//        }else if(size>20){
 //            fact=5;
         }else {
             fact=1;
@@ -193,7 +193,12 @@ public class MapUtil {
             while (rs.next()) {
                 String name = rs.getString(2);
                 String road_id = rs.getString(3);
-                if(name==null||name.trim().length()==0)name = road_id.trim();
+                if(name==null||name.trim().length()==0){
+                    name = road_id.trim();
+                }else {
+                    int off = name.indexOf("-");
+                    if(off>0)name = name.substring(0,off);
+                }
                 Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7));
                 List<Point> points = null;
                 if(mapinfo.containsKey(name)){

@@ -43,9 +43,9 @@ public class LinesHandler extends ProxyHandler {
             JSONArray segs = new JSONArray();
             List<List<Point>> pointslist = entry.getValue();
             int size = pointslist.size();
-            count = count + size;
             for(int i=0;i<size;i++) {
                 List<Point> points = pointslist.get(i);
+                count = count + points.size();
                 JSONObject pointobj = new JSONObject();
                 JSONArray jpoints = new JSONArray();
                 for (Point point : points) {
