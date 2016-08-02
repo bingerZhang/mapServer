@@ -121,6 +121,20 @@ public class Parser {
             return retlines;
         }
 
+        public Map<String, List<List<Point>>> getRainInfo(String table,String date,String hour,int level) {
+
+            Map<String,List<Point>> roadsInfo = MapUtil.getRainInfoByLevel(table,date,hour,level);
+            logger.info("Raining Road data load done!");
+            Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
+            for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
+                String name = entry.getKey();
+                List<Point> points= entry.getValue();
+                List<List<Point>> list = MapUtil.adjustment(points,15d);
+                retlines.put(name,list);
+            }
+            return retlines;
+        }
+
     /**
      * 解析csv文件 到一个list中 每个单元个为一个String类型记录，每一行为一个list。 再将所有的行放到一个总list中
      */
