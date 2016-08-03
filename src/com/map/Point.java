@@ -18,7 +18,17 @@ public class Point {
 
     }
 
-    public Point(int point_id,double point_x, double point_y, double point_z, int ws_id) {
+    public Point(int point_id, double point_x, double point_y, double point_z, double bd_x, double bd_y, int ws_id) {
+        this.point_id = point_id;
+        this.point_x = point_x;
+        this.point_y = point_y;
+        this.point_z = point_z;
+        this.bd_x = bd_x;
+        this.bd_y = bd_y;
+        this.ws_id = ws_id;
+    }
+
+    public Point(int point_id, double point_x, double point_y, double point_z, int ws_id) {
         this.point_id = point_id;
         this.point_x = point_x;
         this.point_y = point_y;

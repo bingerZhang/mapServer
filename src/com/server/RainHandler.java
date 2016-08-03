@@ -28,37 +28,32 @@ public class RainHandler extends ProxyHandler {
         String query = url.getQuery();
         String jpc = Utils.findParamValue(query,"jpc");
         String level = Utils.findParamValue(query,"level");
-        int ll = Integer.valueOf(level);
+        int lev = Integer.valueOf(level);
         Parser parser = Parser.getInstance();
-        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo(null,null,null,ll);
+        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo(null,null,null,lev);
         logger.info("Raining road size: " + rainRoads.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
         int count = 0;
         for (Map.Entry<String, List<List<Point>>> entry : Application.motorwaylines.entrySet()) {
-
-            JSONObject line = new JSONObject();
-            String name = entry.getKey();
-            line.put("name",name);
-            JSONArray segs = new JSONArray();
             List<List<Point>> pointslist = entry.getValue();
             int size = pointslist.size();
             for(int i=0;i<size;i++) {
                 List<Point> points = pointslist.get(i);
                 count = count + points.size();
-                JSONObject pointobj = new JSONObject();
-                JSONArray jpoints = new JSONArray();
+                JSONObject line_obj = new JSONObject();
+                JSONArray line_points = new JSONArray();
                 for (Point point : points) {
                     List<Double> list = new ArrayList<>();
                     list.add(point.getPoint_x());
                     list.add(point.getPoint_y());
-                    jpoints.put(list);
+                    line_points.put(list);
                 }
-                pointobj.put("points",jpoints);
-                segs.put(pointobj);
+                line_obj.put("geo",line_points);
+                line_obj.put("count",lev);
+                lines.put(line_obj);
             }
-            line.put("segs",segs);
-            lines.put(line);
+
         }
         logger.info("points count: " + count);
         json.put("lines",lines);

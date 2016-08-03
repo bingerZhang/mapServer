@@ -6,8 +6,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import java.io.*;
-import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +23,7 @@ public class MapUtil {
     {
         return d * Math.PI / 180.0;
     }
-    public static String SELECT_RAIN = "select mw.name, mw.road_id, mw.latitude,mw.longitude , wbt.rain_probability from motorway mw inner join weather_by_town wbt on wbt.town_id = mw.wsp_id ";
+    public static String SELECT_RAIN = "select * from motorway mw inner join weather_by_town wbt on wbt.town_id = mw.wsp_id ";
     public static String WHERE_RAIN_G = "where mw.name like 'G%' ";
     public static String[] RAIN_LEVEL = {"and 1=1","and wbt.rain_probability >= 40.0 and wbt.rain_probability < 60.0","and wbt.rain_probability >= 60.0 and wbt.rain_probability < 80.0","and wbt.rain_probability >= 80.0"};
     public static String SELECT_DATE = "";
@@ -151,9 +151,8 @@ public class MapUtil {
 
     public static void updatePointInfo(List<Point> pointList,List<Point> wsplist){
         int size = pointList.size();
-        for(int i=0;i<size;i++){
-            Point a = pointList.get(i);
-            Point wsp = nearByPoint(wsplist,a);
+        for (Point a : pointList) {
+            Point wsp = nearByPoint(wsplist, a);
             a.setWs_id(wsp.getId());
         }
     }
@@ -202,7 +201,7 @@ public class MapUtil {
             sql = sql + " WHEN " + point.getId() + " THEN " + nf.format(point.getBd_y());
             count++;
             where = where + point.getId() + ",";
-            if(count>500){
+            if(count>100){
                 sql = sql + " END\n" ;
                 sql = sql + where.substring(0,where.length()-1)+ ")";
                 ret = mysqlConnector.updateSQL(sql);
@@ -261,7 +260,7 @@ public class MapUtil {
     //geoconv to bd geo
     public static List<Point> loadPoints(String table){
         List<Point> mapinfo = new ArrayList<>();
-        String s = "select * from " + table + " where name like 'G%'";
+        String s = "select * from " + table + " where name like 'G%'and bd_lat<1"; // limit 55";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         ResultSet rs = mysqlConnector.query(s);
@@ -363,7 +362,7 @@ public class MapUtil {
                     int off = name.indexOf("-");
                     if(off>0)name = name.substring(0,off);
                 }
-                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7));
+                Point point = new Point(rs.getInt("id"),0d,0d,0d,rs.getDouble("bd_lng"),rs.getDouble("bd_lat"),0);
                 List<Point> points = null;
                 if(motorwayInfo.containsKey(name)){
                     points = motorwayInfo.get(name);
@@ -392,32 +391,17 @@ public class MapUtil {
         conn.setReadTimeout(40 * 1000);
         conn.setUseCaches(false);
         conn.setRequestMethod("GET");
-//        Headers headers = exchange.getRequestHeaders();
-//        if (headers != null) {
-//            for (String header : headers.keySet()) {
-//                List<String> values = headers.get(header);
-//                for (int i = 0; i < values.size(); i++) {
-//                    String value = values.get(i);
-//                    if (i == 0) {
-//                        conn.setRequestProperty(header, value);
-//                    } else {
-//                        conn.addRequestProperty(header, value);
-//                    }
-//                }
-//            }
-//        }
+//        conn.setRequestProperty(header, value);
         conn.setInstanceFollowRedirects(true);
         conn.connect();
         return conn;
     }
     public static Map toMap(String jsonString) throws IOException, JSONException {
-
         JSONObject jsonObject = new JSONObject(jsonString);
         Map result = new HashMap();
         Iterator iterator = jsonObject.keys();
         String key = null;
         Object value = null;
-
         while (iterator.hasNext()) {
             key = (String) iterator.next();
             value = jsonObject.get(key);
@@ -429,52 +413,77 @@ public class MapUtil {
         }
         return result;
     }
-    public static void main(String[] args) {
-        List<Point> motorwayPoints = loadPoints("motorway");
-        System.out.println("motorway road count: " + motorwayPoints.size());
+
+    public static String getResponse(URL url) throws IOException {
+        HttpURLConnection conn = null;
+        conn = openConnection(url);
+        int statusCode = conn.getResponseCode();
+        if(statusCode > 200)return null;
+        int len = 0;
+        byte[] temp = new byte[1024];
+        InputStream is = conn.getInputStream();
+        StringBuilder content = new StringBuilder();
+        while ((len = is.read(temp)) != -1) {
+            content.append(new String(temp, 0, len));
+        }
+        return content.toString();
+    }
+
+    public static void updatePoints(List<Point> lists, int offset, String points) throws IOException, JSONException {
         String url = "http://api.map.baidu.com/geoconv/v1/?coords=";
-        String points = "";
         String typeAndkey = "&from=1&to=6&ak=MGLOQ2LDO2W4w1ut42Y3kGPAxBk0G5N8";
+        URL wurl = new URL(url + points + typeAndkey);
+        String res = getResponse(wurl);
+        JSONObject jsonObject = new JSONObject(res);
+        JSONArray list = jsonObject.getJSONArray("result");
+        for(int i=0;i<list.length();i++){
+            JSONObject jso = list.getJSONObject(i);
+            Point tmp = lists.get(offset+i);
+            tmp.setBd_x(jso.getDouble("x"));
+            tmp.setBd_y(jso.getDouble("y"));
+        }
+    }
+
+    public static void updateBd_xy(String table){
+        List<Point> motorwayPoints = loadPoints(table);
+        System.out.println("motorway road count: " + motorwayPoints.size());
+
+        String points = "";
+
         int count = 0;
         int current = 0;
         for(Point point:motorwayPoints){
-             if(count>0&&count%50==0){
-
-                  try {
-                      points = points.substring(0,points.length()-1);
-                      URL wurl = new URL(url + points + typeAndkey);
-                      HttpURLConnection conn = null;
-                     conn = openConnection(wurl);
-                     int statusCode = conn.getResponseCode();
-                      if(statusCode > 200)continue;
-                      int len = 0;
-                      byte[] temp = new byte[1024];
-                      InputStream is = conn.getInputStream();
-                      StringBuilder content = new StringBuilder();
-                      while ((len = is.read(temp)) != -1) {
-                          content.append(new String(temp, 0, len));
-                      }
-                      String res = content.toString();
-                      JSONObject jsonObject = new JSONObject(res);
-                      JSONArray list = jsonObject.getJSONArray("result");
-                      for(int i=0;i<list.length();i++){
-                          JSONObject jso = list.getJSONObject(i);
-                          Point tmp = motorwayPoints.get(current+i);
-                          tmp.setBd_x(jso.getDouble("x"));
-                          tmp.setBd_y(jso.getDouble("y"));
-                      }
-                      current = current + 50;
-                      points = "";
-                  }catch (Exception e){
-                      e.printStackTrace();
-                      break;
-                  }
-             }
+            if(count>0&&count%90==0){
+                if(count%9000==0){
+                    System.out.println("count: " + count);
+                }
+                try {
+                    points = points.substring(0,points.length()-1);
+                    updatePoints(motorwayPoints,current,points);
+                    current = current + 50;
+                    points = "";
+                }catch (Exception e){
+                    e.printStackTrace();
+                    break;
+                }
+            }
             points = points + "" + point.getPoint_x()+ "," + point.getPoint_y() + ";";
             count++;
         }
+        try {
+            if(points.length()>1) {
+                points = points.substring(0, points.length() - 1);
+                updatePoints(motorwayPoints, current, points);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         syncPoint_bdx_ToDB(motorwayPoints);
         syncPoint_bdy_ToDB(motorwayPoints);
+    }
+    public static void main(String[] args) {
+
 //        List<Point> wspInfo = loadWSInfo();
 //        System.out.println("weather station count: " + wspInfo.size());
 //
@@ -483,6 +492,7 @@ public class MapUtil {
 //            updatePointInfo(points,wspInfo);
 //        }
 //        syncPointInfoToDB(motorwayInfo);
+        updateBd_xy("motorway");
         System.out.println("Done");
 
     }

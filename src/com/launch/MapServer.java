@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class MapServer implements Main {
-//public class MapServer {
+//public class MapServer implements Main {
+public class MapServer {
         private static Logger logger = Logger.getLogger("MapServer");
 
-    public void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         Parser parser = Parser.getInstance();
 //        File map = null;
 //        File csv = null;
@@ -46,8 +46,8 @@ public class MapServer implements Main {
 
         logger.info("Started, loading....");
 //        Application.motorwayInfo = MapUtil.loadRoadInfo("motorway");
-        Application.motorwaylines =parser.getRoadsInfo("motorway");
-        logger.info("motorway road count: " + Application.motorwaylines.size());
+//        Application.motorwaylines =parser.getRoadsInfo("motorway");
+//        logger.info("motorway road count: " + Application.motorwaylines.size());
 
         TrackerServer.startServer();
     }
