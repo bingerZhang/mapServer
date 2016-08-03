@@ -35,7 +35,7 @@ public class RainHandler extends ProxyHandler {
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
         int count = 0;
-        for (Map.Entry<String, List<List<Point>>> entry : Application.motorwaylines.entrySet()) {
+        for (Map.Entry<String, List<List<Point>>> entry : rainRoads.entrySet()) {
             List<List<Point>> pointslist = entry.getValue();
             int size = pointslist.size();
             for(int i=0;i<size;i++) {
@@ -45,8 +45,8 @@ public class RainHandler extends ProxyHandler {
                 JSONArray line_points = new JSONArray();
                 for (Point point : points) {
                     List<Double> list = new ArrayList<>();
-                    list.add(point.getPoint_x());
-                    list.add(point.getPoint_y());
+                    list.add(point.getBd_x());
+                    list.add(point.getBd_y());
                     line_points.put(list);
                 }
                 line_obj.put("geo",line_points);

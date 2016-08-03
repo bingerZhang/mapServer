@@ -23,13 +23,17 @@ public class MapUtil {
     {
         return d * Math.PI / 180.0;
     }
-    public static String SELECT_RAIN = "select * from motorway mw inner join weather_by_town wbt on wbt.town_id = mw.wsp_id ";
-    public static String WHERE_RAIN_G = "where mw.name like 'G%' ";
-    public static String[] RAIN_LEVEL = {"and 1=1","and wbt.rain_probability >= 40.0 and wbt.rain_probability < 60.0","and wbt.rain_probability >= 60.0 and wbt.rain_probability < 80.0","and wbt.rain_probability >= 80.0"};
+    public static String SELECT_RAIN = "select * from motorway_rain w ";
+    public static String WHERE_RAIN_G = "where 1=1 ";
+    public static String[] RAIN_LEVEL = {"","and w.rain_probability >= 40.0 and w.rain_probability < 60.0","and w.rain_probability >= 60.0 and w.rain_probability < 80.0","and w.rain_probability >= 80.0"};
     public static String SELECT_DATE = "";
     public static String SELECT_HOUR = "";
     public static java.text.NumberFormat nf = java.text.NumberFormat.getInstance();
 
+
+//    create view motorway_rain as
+//    select m.id,m.name,m.road_id,m.bd_lng,m.bd_lat,w.rain_probability
+//    from motorway m inner join weather_by_town w on w.town_id = m.wsp_id where m.name like 'G%';
 
     public static double getDistance(double lat1, double lng1, double lat2, double lng2)
     {
@@ -74,13 +78,13 @@ public class MapUtil {
         int size = points.size();
         int fact = 1;
         if(size>500){
-            fact=500;
-//        }else if(size > 300){
-//            fact=300;
-//        }else if(size>50){
-//            fact=30;
-//        }else if(size>20){
-//            fact=5;
+            fact=200;
+        }else if(size > 300){
+            fact=100;
+        }else if(size>100){
+            fact=40;
+        }else if(size>50){
+            fact=30;
         }else {
             fact=1;
         }
@@ -354,15 +358,15 @@ public class MapUtil {
         ResultSet rs = mysqlConnector.query(s);
         try {
             while (rs.next()) {
-                String name = rs.getString(2);
-                String road_id = rs.getString(3);
+                String name = rs.getString("name");
+                String road_id = rs.getString("road_id");
                 if(name==null||name.trim().length()==0){
                     name = road_id.trim();
                 }else {
                     int off = name.indexOf("-");
                     if(off>0)name = name.substring(0,off);
                 }
-                Point point = new Point(rs.getInt("id"),0d,0d,0d,rs.getDouble("bd_lng"),rs.getDouble("bd_lat"),0);
+                Point point = new Point(rs.getInt("id"),rs.getDouble("longitude"),rs.getDouble("latitude"),0d,rs.getDouble("bd_lng"),rs.getDouble("bd_lat"),0);
                 List<Point> points = null;
                 if(motorwayInfo.containsKey(name)){
                     points = motorwayInfo.get(name);
