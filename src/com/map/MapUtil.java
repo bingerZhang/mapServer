@@ -52,9 +52,15 @@ public class MapUtil {
         return getDistance(a.getPoint_y(),a.getPoint_x(),b.getPoint_y(),b.getPoint_x());
     }
     public static List<List<Point>> adjustment(List<Point> pointList,double maxdistance){
+
         int size = pointList.size();
         List<List<Point>> lists = new ArrayList<List<Point>>();
         int start = 0;
+        if(maxdistance==0d){
+            Collections.sort(pointList,new PointComparator());
+            lists.add(pointList);
+            return lists;
+        }
         for(int i=0;i<size-1;i++){
             Point a = pointList.get(i);
             Point b = pointList.get(i+1);
@@ -283,6 +289,40 @@ public class MapUtil {
             }
         }
         return mapinfo;
+    }
+    public static Map<String,List<Point>> loadHighWayInfo(String table){
+        Map<String,List<Point>> highWayinfo = new HashMap<>();
+        String s = "select * from " + table ;
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String name = rs.getString("NAME");
+                String lat_str = rs.getString("lat");
+                String lng_str = rs.getString("lng");
+                int pid = rs.getInt("PID");
+                Point point = new Point(pid,Double.valueOf(lng_str),Double.valueOf(lat_str),0d,0);
+                List<Point> points = null;
+                if(highWayinfo.containsKey(name)){
+                    points = highWayinfo.get(name);
+                    points.add(point);
+                }else {
+                    points = new ArrayList<>();
+                    points.add(point);
+                    highWayinfo.put(name, points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null) {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return highWayinfo;
     }
 
     public static Map<String,List<Point>> loadRoadInfo(String table){

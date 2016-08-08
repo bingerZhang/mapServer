@@ -11,11 +11,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-//public class MapServer implements Main {
-public class MapServer {
+public class MapServer implements Main {
+//public class MapServer {
         private static Logger logger = Logger.getLogger("MapServer");
 
-    public static void main(String[] args) throws IOException {
+    public void main(String[] args) throws IOException {
         Parser parser = Parser.getInstance();
 //        File map = null;
 //        File csv = null;

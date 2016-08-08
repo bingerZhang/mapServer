@@ -108,6 +108,20 @@ public class Parser {
             return retlines;
         }
 
+        public Map<String, List<List<Point>>> getHighWayInfo(String table) {
+            Map<String,List<Point>> highwayInfo = MapUtil.loadHighWayInfo(table);
+            logger.info("HighWay Road data load done!");
+            Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
+            for (Map.Entry<String, List<Point>> entry : highwayInfo.entrySet()) {
+                String name = entry.getKey();
+                List<Point> points= entry.getValue();
+                List<List<Point>> list = MapUtil.adjustment(points,0d);
+                retlines.put(name,list);
+            }
+            return retlines;
+        }
+
+
         public Map<String, List<List<Point>>> getRoadsInfo(String table) {
             Map<String,List<Point>> roadsInfo = MapUtil.loadRoadInfo(table);
             logger.info("Road data load done!");
