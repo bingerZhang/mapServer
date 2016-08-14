@@ -13,6 +13,7 @@ public class Point {
     double bd_x;
     double bd_y;
     int ws_id; //weather_station id
+    int level;
 
     Point(){
 
@@ -35,6 +36,7 @@ public class Point {
         this.point_z = point_z;
         this.ws_id = ws_id;
     }
+
 
     public int getPoint_id() {
         return point_id;
@@ -98,6 +100,13 @@ public class Point {
 
     public void setPoint_y(double point_y) {
         this.point_y = point_y;
+    }
+
+    public int getLevel(){
+        return level;
+    }
+    public void setLevel(int level){
+        this.level = level;
     }
 
     @Override

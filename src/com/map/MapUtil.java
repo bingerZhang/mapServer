@@ -23,9 +23,10 @@ public class MapUtil {
     {
         return d * Math.PI / 180.0;
     }
-    public static String SELECT_RAIN = "select * from motorway_rain w ";
+    public static String SELECT_MOTORWAY_RAIN = "select * from motorway_rain w ";
+    public static String SELECT_HIGHWAY_RAIN = "select * from highway_rain w ";
     public static String WHERE_RAIN_G = "where 1=1 ";
-    public static String[] RAIN_LEVEL = {"","and w.rain_probability >= 40.0 and w.rain_probability < 60.0","and w.rain_probability >= 60.0 and w.rain_probability < 80.0","and w.rain_probability >= 80.0"};
+    public static String[] RAIN_LEVEL = {"and w.rain_probability < 30.0","and w.rain_probability >= 30.0 and w.rain_probability < 60.0","and w.rain_probability >= 60.0"};
     public static String SELECT_DATE = "";
     public static String SELECT_HOUR = "";
     public static java.text.NumberFormat nf = java.text.NumberFormat.getInstance();
@@ -231,8 +232,8 @@ public class MapUtil {
 
 
 
-    public static void syncPointInfoToDB(Map<String,List<Point>> roadInfo){
-        String prefix = "UPDATE motorway SET wsp_id = CASE id ";
+    public static void syncPointInfoToDB(String table,Map<String,List<Point>> roadInfo){
+        String prefix = "UPDATE "+ table + " SET wsp_id = CASE PID ";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         boolean ret = true;
@@ -240,7 +241,7 @@ public class MapUtil {
             List<Point> list = roadInfo.get(key);
             String sql = new String(prefix);
             int count = 0;
-            String where = "where id in (";
+            String where = "where PID in (";
             for(Point point: list){
                 sql = sql + " WHEN " + point.getId() + " THEN " + point.getWs_id();
                 count++;
@@ -251,8 +252,11 @@ public class MapUtil {
                     ret = mysqlConnector.updateSQL(sql);
                     sql= new String(prefix);
                     count=0;
-                    where = "where id in (";
-                    if(!ret)break;
+                    where = "where PID in (";
+                    if(!ret){
+                        System.out.println("updateSQL failed !");
+                        break;
+                    }
                 }
 
             }
@@ -261,7 +265,10 @@ public class MapUtil {
                 sql = sql + " END\n";
                 sql = sql + where.substring(0,where.length()-1)+ ")";
                 ret = mysqlConnector.updateSQL(sql);
-                if (!ret) break;
+                if (!ret) {
+                    System.out.println("updateSQL failed !");
+                    break;
+                }
             }
             if (!ret) break;
         }
@@ -390,31 +397,40 @@ public class MapUtil {
         return wspinfo;
     }
 
-    public static Map<String, List<Point>> getRainInfoByLevel(String table,String date,String hour,int level){
-        Map<String,List<Point>> motorwayInfo = new HashMap<>();
-        String s = SELECT_RAIN + WHERE_RAIN_G + RAIN_LEVEL[level]; // + " and date and hour";
+    public static int getLevel(Double pp) {
+        if (pp >= 60d)
+        {
+            return 2;
+        }else if(pp>=30d){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
+
+    public static Map<String, List<Point>> getRainInfo(String table){
+        Map<String,List<Point>> highwayInfo = new HashMap<>();
+        String s = "select * from " + table ;//+ " where name like 'G6'"; // + " and date and hour";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         ResultSet rs = mysqlConnector.query(s);
         try {
             while (rs.next()) {
-                String name = rs.getString("name");
-                String road_id = rs.getString("road_id");
-                if(name==null||name.trim().length()==0){
-                    name = road_id.trim();
-                }else {
-                    int off = name.indexOf("-");
-                    if(off>0)name = name.substring(0,off);
-                }
-                Point point = new Point(rs.getInt("id"),rs.getDouble("longitude"),rs.getDouble("latitude"),0d,rs.getDouble("bd_lng"),rs.getDouble("bd_lat"),0);
+                String name = rs.getString("NAME");
+                int pid = rs.getInt("PID");
+
+                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0);
                 List<Point> points = null;
-                if(motorwayInfo.containsKey(name)){
-                    points = motorwayInfo.get(name);
+                double rp = rs.getDouble("rain_probability");
+                int level = getLevel(rp);
+                point.setLevel(level);
+                if(highwayInfo.containsKey(name)){
+                    points = highwayInfo.get(name);
                     points.add(point);
                 }else {
                     points = new ArrayList<>();
                     points.add(point);
-                    motorwayInfo.put(name, points);
+                    highwayInfo.put(name, points);
                 }
             }
             mysqlConnector.disconnSQL();
@@ -426,7 +442,42 @@ public class MapUtil {
                 mysqlConnector.disconnSQL();
             }
         }
-        return motorwayInfo;
+        return highwayInfo;
+    }
+
+
+    public static Map<String, List<Point>> getRainInfoByLevel(String table,String date,String hour,int level){
+        Map<String,List<Point>> highwayInfo = new HashMap<>();
+        String s = SELECT_HIGHWAY_RAIN + WHERE_RAIN_G + RAIN_LEVEL[level]; // + " and date and hour";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String name = rs.getString("NAME");
+                int pid = rs.getInt("PID");
+
+                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0);
+                List<Point> points = null;
+                if(highwayInfo.containsKey(name)){
+                    points = highwayInfo.get(name);
+                    points.add(point);
+                }else {
+                    points = new ArrayList<>();
+                    points.add(point);
+                    highwayInfo.put(name, points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null){
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return highwayInfo;
     }
 
     protected static HttpURLConnection openConnection(URL url) throws IOException {
@@ -528,15 +579,17 @@ public class MapUtil {
     }
     public static void main(String[] args) {
 
-//        List<Point> wspInfo = loadWSInfo();
-//        System.out.println("weather station count: " + wspInfo.size());
-//
-//        for(String key:motorwayInfo.keySet()){
-//            List<Point> points = motorwayInfo.get(key);
-//            updatePointInfo(points,wspInfo);
-//        }
-//        syncPointInfoToDB(motorwayInfo);
-        updateBd_xy("motorway");
+        List<Point> wspInfo = loadWSInfo();
+        System.out.println("weather station count: " + wspInfo.size());
+
+        Map<String,List<Point>> highwayinfo = loadHighWayInfo("highway");
+
+        for(String key:highwayinfo.keySet()){
+            List<Point> points = highwayinfo.get(key);
+            updatePointInfo(points,wspInfo);
+        }
+        syncPointInfoToDB("highway",highwayinfo);
+        //updateBd_xy("motorway");
         System.out.println("Done");
 
     }

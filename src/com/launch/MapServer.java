@@ -14,8 +14,8 @@ import java.util.Map;
 public class MapServer implements Main {
 //public class MapServer {
         private static Logger logger = Logger.getLogger("MapServer");
-
     public void main(String[] args) throws IOException {
+//    public static void main(String[] args) throws IOException {
         Parser parser = Parser.getInstance();
 //        File map = null;
 //        File csv = null;
