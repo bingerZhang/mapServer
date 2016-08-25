@@ -17,6 +17,11 @@ public class MysqlConnector {
 
     // connect to MySQL
     public void connSQL() {
+        connSQL(db_host,db_user,db_pwd);
+    }
+
+    // connect to MySQL
+    public void connSQL(String host,String db_user,String db_pwd) {
         String url = "jdbc:mysql://"+ db_host + ":3306/weather?autoReconnect=true&useUnicode=TRUE&characterEncoding=UTF8";
 
         try {

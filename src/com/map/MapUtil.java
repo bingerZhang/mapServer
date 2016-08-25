@@ -7,7 +7,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,6 +33,10 @@ public class MapUtil {
 //    create view motorway_rain as
 //    select m.id,m.name,m.road_id,m.bd_lng,m.bd_lat,w.rain_probability
 //    from motorway m inner join weather_by_town w on w.town_id = m.wsp_id where m.name like 'G%';
+
+//    create view map_rain as
+//    select h.id,h.name,h.PID,h.lng,h.lat,tr.rain_p0,tr.rain_p1,tr.rain_p2,tr.rain_p3,tr.rain_p4,tr.rain_p5,tr.rain_p6,tr.rain_p7,tr.rain_p8,tr.rain_p9,tr.rain_p10,tr.rain_p11
+//    from highway h inner join town_rain tr on tr.wsp_id = h.wsp_id ;
 
     public static double getDistance(double lat1, double lng1, double lat2, double lng2)
     {
@@ -526,6 +529,56 @@ public class MapUtil {
         syncPoint_bdx_ToDB(motorwayPoints);
         syncPoint_bdy_ToDB(motorwayPoints);
     }
+
+    public static boolean lineToColumnForRain(){
+        String sql = "select id,rain_probability,town_id from weather_by_town order by id";
+        Map<Integer,List<Nodep>> weatherInfo = new HashMap<>();
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(sql);
+        try {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                int town_id = rs.getInt("town_id");
+                String rain_probability = rs.getString("rain_probability");
+                Nodep nodep = new Nodep(id,town_id,Double.valueOf(rain_probability));
+
+                List<Nodep> points = null;
+                if(weatherInfo.containsKey(town_id)){
+                    points = weatherInfo.get(town_id);
+                    if(points.size()<12)points.add(nodep);
+                }else {
+                    points = new ArrayList<>();
+                    points.add(nodep);
+                    weatherInfo.put(town_id, points);
+                }
+            }
+
+            for(int idkey:weatherInfo.keySet()){
+                List<Nodep> points = weatherInfo.get(idkey);
+                Collections.sort(points,new NodepComparator());
+                String insertsql = "insert into town_rain values(null,";
+                insertsql = insertsql + idkey + ",";
+
+                for(Nodep nodep:points){
+                    insertsql = insertsql + nodep.getProbability() + ",";
+                }
+                insertsql = insertsql.substring(0,insertsql.length()-1);
+                insertsql = insertsql + ")";
+                mysqlConnector.insertSQL(insertsql);
+            }
+            mysqlConnector.disconnSQL();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null) {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return true;
+    }
+
     public static void main(String[] args) {
 
 //        List<Point> wspInfo = loadWSInfo();
@@ -536,7 +589,8 @@ public class MapUtil {
 //            updatePointInfo(points,wspInfo);
 //        }
 //        syncPointInfoToDB(motorwayInfo);
-        updateBd_xy("motorway");
+//        updateBd_xy("motorway");
+        lineToColumnForRain();
         System.out.println("Done");
 
     }
