@@ -135,6 +135,20 @@ public class Parser {
             return retlines;
         }
 
+    public Map<String, List<List<Point>>> getRainInfo(String table) {
+
+        Map<String,List<Point>> roadsInfo = MapUtil.getRainInfo(table);
+        logger.info("Raining Road data load done!");
+        Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
+        for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
+            String name = entry.getKey();
+            List<Point> points= entry.getValue();
+            List<List<Point>> list = MapUtil.adjustment(points,0d);
+            retlines.put(name,list);
+        }
+        return retlines;
+    }
+
         public Map<String, List<List<Point>>> getRainInfo(String table,String date,String hour,int level) {
 
             Map<String,List<Point>> roadsInfo = MapUtil.getRainInfoByLevel(table,date,hour,level);
@@ -143,7 +157,7 @@ public class Parser {
             for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
                 String name = entry.getKey();
                 List<Point> points= entry.getValue();
-                List<List<Point>> list = MapUtil.adjustment(points,20d);
+                List<List<Point>> list = MapUtil.adjustment(points,0d);
                 retlines.put(name,list);
             }
             return retlines;
