@@ -287,7 +287,7 @@ public class MapUtil {
         ResultSet rs = mysqlConnector.query(s);
         try {
             while (rs.next()) {
-                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7));
+                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7),1);
                 mapinfo.add(point);
             }
             mysqlConnector.disconnSQL();
@@ -313,7 +313,7 @@ public class MapUtil {
                 String lat_str = rs.getString("lat");
                 String lng_str = rs.getString("lng");
                 int pid = rs.getInt("PID");
-                Point point = new Point(pid,Double.valueOf(lng_str),Double.valueOf(lat_str),0d,0);
+                Point point = new Point(pid,Double.valueOf(lng_str),Double.valueOf(lat_str),0d,0,1);
                 List<Point> points = null;
                 if(highWayinfo.containsKey(name)){
                     points = highWayinfo.get(name);
@@ -352,7 +352,7 @@ public class MapUtil {
                     int off = name.indexOf("-");
                     if(off>0)name = name.substring(0,off);
                 }
-                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7));
+                Point point = new Point(rs.getInt(1),rs.getDouble(5),rs.getDouble(4),0d,rs.getInt(7),1);
                 List<Point> points = null;
                 if(mapinfo.containsKey(name)){
                     points = mapinfo.get(name);
@@ -385,7 +385,7 @@ public class MapUtil {
                 String name = rs.getString(2);
                 String road_id = rs.getString(3);
                 if(name==null||name.trim().length()==0)name = road_id.trim();
-                Point point = new Point(rs.getInt(1),rs.getDouble(4),rs.getDouble(3),0d,rs.getInt(1));
+                Point point = new Point(rs.getInt(1),rs.getDouble(4),rs.getDouble(3),0d,rs.getInt(1),1);
                 wspinfo.add(point);
             }
             mysqlConnector.disconnSQL();
@@ -423,10 +423,16 @@ public class MapUtil {
                 String name = rs.getString("NAME");
                 int pid = rs.getInt("PID");
 
-                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0);
+                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0,12);
                 List<Point> points = null;
-                double rp = rs.getDouble("rain_probability");
-                int level = getLevel(rp);
+                int[] level = new int[12];
+                String pp = "rain_p";
+                for(int j=0;j<12;j++){
+                    String rskey = pp + j;
+                    double rp = rs.getDouble(rskey);
+                    int level_p = getLevel(rp);
+                    level[j]=level_p;
+                }
                 point.setLevel(level);
                 if(highwayInfo.containsKey(name)){
                     points = highwayInfo.get(name);
@@ -461,7 +467,7 @@ public class MapUtil {
                 String name = rs.getString("NAME");
                 int pid = rs.getInt("PID");
 
-                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0);
+                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0,1);
                 List<Point> points = null;
                 if(highwayInfo.containsKey(name)){
                     points = highwayInfo.get(name);
@@ -609,15 +615,22 @@ public class MapUtil {
             for(int idkey:weatherInfo.keySet()){
                 List<Nodep> points = weatherInfo.get(idkey);
                 Collections.sort(points,new NodepComparator());
-                String insertsql = "insert into town_rain values(null,";
-                insertsql = insertsql + idkey + ",";
-
-                for(Nodep nodep:points){
-                    insertsql = insertsql + nodep.getProbability() + ",";
+//                update town_rain set rain_p0=0.0,rain_p1=1,rain_p2=2,rain_p3=3,rain_p4=4,rain_p5=5,rain_p6=6,rain_p7=7,rain_p8=8,rain_p9=9,rain_p10=10,rain_p11=11 where wsp_id = 1;
+                String updatesql = "update town_rain set rain_p";
+                if(points.size()>11){
+                    for(int i=0;i<12;i++){
+                         updatesql = updatesql + i + "=" + points.get(i).getProbability();
+                        if(i<11)updatesql = updatesql + ",rain_p";
+                    }
+                    updatesql = updatesql + " where wsp_id = " + idkey;
                 }
-                insertsql = insertsql.substring(0,insertsql.length()-1);
-                insertsql = insertsql + ")";
-                mysqlConnector.insertSQL(insertsql);
+//                for(Nodep nodep:points){
+//                    insertsql = insertsql + nodep.getProbability() + ",";
+//                }
+//                insertsql = insertsql.substring(0,insertsql.length()-1);
+//                insertsql = insertsql + ")";
+//                mysqlConnector.insertSQL(insertsql);
+                mysqlConnector.updateSQL(updatesql);
             }
             mysqlConnector.disconnSQL();
         }catch (Exception e){

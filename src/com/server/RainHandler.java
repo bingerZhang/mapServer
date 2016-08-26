@@ -30,12 +30,15 @@ public class RainHandler extends ProxyHandler {
         //String level = Utils.findParamValue(query,"level");
         //int lev = Integer.valueOf(level);
         Parser parser = Parser.getInstance();
-        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("highway_rain");
+//        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("highway_rain");
+        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("map_rain");
         logger.info("Raining road size: " + rainRoads.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
         int count = 0;
         for (Map.Entry<String, List<List<Point>>> entry : rainRoads.entrySet()) {
+            JSONObject roadjson = new JSONObject();
+            JSONArray roadsegs = new JSONArray();
             List<List<Point>> pointslist = entry.getValue();
             int size = pointslist.size();
             for(int i=0;i<size;i++) {
@@ -47,13 +50,18 @@ public class RainHandler extends ProxyHandler {
                     List<Double> list = new ArrayList<>();
                     list.add(point.getPoint_x());
                     list.add(point.getPoint_y());
-                    list.add((double)point.getLevel());
+                    int[] level = point.getLevel();
+                    for(int j=0;j<level.length;j++){
+                        list.add((double)level[j]);
+                    }
                     line_points.put(list);
                 }
                 line_obj.put("geo",line_points);
-                line_obj.put("count",0);
-                lines.put(line_obj);
+                roadsegs.put(line_obj);
             }
+            roadjson.put("name",entry.getKey());
+            roadjson.put("segs",roadsegs);
+            lines.put(roadjson);
 
         }
         logger.info("points count: " + count);

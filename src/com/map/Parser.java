@@ -93,7 +93,7 @@ public class Parser {
                         points = new ArrayList<Point>();
                     }
                     int size = points.size();
-                    Point point1 = new Point(0,Double.valueOf(point.get(5)),Double.valueOf(point.get(6)),0d,size + 1);
+                    Point point1 = new Point(0,Double.valueOf(point.get(5)),Double.valueOf(point.get(6)),0d,size + 1,1);
                     points.add(point1);
                     lines.put(name,points);
 

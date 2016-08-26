@@ -13,13 +13,13 @@ public class Point {
     double bd_x;
     double bd_y;
     int ws_id; //weather_station id
-    int level;
+    int level[];
 
     Point(){
 
     }
 
-    public Point(int point_id, double point_x, double point_y, double point_z, double bd_x, double bd_y, int ws_id) {
+    public Point(int point_id, double point_x, double point_y, double point_z, double bd_x, double bd_y, int ws_id,int level_size) {
         this.point_id = point_id;
         this.point_x = point_x;
         this.point_y = point_y;
@@ -27,16 +27,23 @@ public class Point {
         this.bd_x = bd_x;
         this.bd_y = bd_y;
         this.ws_id = ws_id;
+        level = new int[level_size];
     }
 
-    public Point(int point_id, double point_x, double point_y, double point_z, int ws_id) {
+    public Point(int point_id, double point_x, double point_y, double point_z, int ws_id,int level_size) {
         this.point_id = point_id;
         this.point_x = point_x;
         this.point_y = point_y;
-        this.point_z = point_z;
         this.ws_id = ws_id;
+        level = new int[level_size];
     }
 
+    public void setLevel(int[] level) {
+        this.level = level;
+    }
+    public int[] getLevel() {
+        return level;
+    }
 
     public int getPoint_id() {
         return point_id;
@@ -100,13 +107,6 @@ public class Point {
 
     public void setPoint_y(double point_y) {
         this.point_y = point_y;
-    }
-
-    public int getLevel(){
-        return level;
-    }
-    public void setLevel(int level){
-        this.level = level;
     }
 
     @Override
