@@ -11,9 +11,9 @@ public class MysqlConnector {
     PreparedStatement statement = null;
     PreparedStatement pst = null;
     PreparedStatement ps = null;
-    String db_host = "60.206.107.184";
+    String db_host = "59.110.22.227";
     String db_user = "root";
-    String db_pwd = "root123";
+    String db_pwd = "itqmysql";
 
     // connect to MySQL
     public void connSQL() {
@@ -22,7 +22,7 @@ public class MysqlConnector {
 
     // connect to MySQL
     public void connSQL(String host,String db_user,String db_pwd) {
-        String url = "jdbc:mysql://"+ db_host + ":3306/weather?autoReconnect=true&useUnicode=TRUE&characterEncoding=UTF8";
+        String url = "jdbc:mysql://"+ db_host + ":3306/itqweather?autoReconnect=true&useUnicode=TRUE&characterEncoding=UTF8&allowMultiQueries=true";
 
         try {
             Class.forName("com.mysql.jdbc.Driver");

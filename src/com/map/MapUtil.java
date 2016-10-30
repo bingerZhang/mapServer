@@ -7,7 +7,6 @@ import org.codehaus.jettison.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -31,6 +30,8 @@ public class MapUtil {
     public static String SELECT_HOUR = "";
     public static java.text.NumberFormat nf = java.text.NumberFormat.getInstance();
 
+    public static String BAIDU_CONV_URL = "http://api.map.baidu.com/geoconv/v1/?coords=";
+    public static String AK = "&ak=MGLOQ2LDO2W4w1ut42Y3kGPAxBk0G5N8";
 
 //    create view motorway_rain as
 //    select m.id,m.name,m.road_id,m.bd_lng,m.bd_lat,w.rain_probability
@@ -644,7 +645,107 @@ public class MapUtil {
         return true;
     }
 
-    public static void main(String[] args) {
+    public static List<GpsPoint> getGpsPoints(){
+        List<GpsPoint> gpsPoints = new ArrayList<>();
+        String s = "select * from gps_mapping gp where gp.bd_lat=0 or gp.bd_lng=0";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                double lat = rs.getDouble("gps_lat");
+                double lng = rs.getDouble("gps_lng");
+                GpsPoint gpsPoint = new GpsPoint(id,lat,lng);
+                gpsPoints.add(gpsPoint);
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null){
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return gpsPoints;
+    }
+
+    public static List<BdPoint> gps_to_bd(List<GpsPoint> gpsPoints) throws Exception {
+        List<BdPoint> bdPoints = new ArrayList<>();
+        String sourcePoints = "";
+        for(GpsPoint point: gpsPoints){
+            sourcePoints = sourcePoints + "" + point.getLng()+ "," + point.getLat() + ";";
+        }
+        if(sourcePoints.length()>1)
+        {
+            sourcePoints = sourcePoints.substring(0,sourcePoints.length()-1);
+        }else {return null;}
+        URL wurl = new URL(BAIDU_CONV_URL + sourcePoints + AK);
+        String res = getResponse(wurl);
+        JSONObject jsonObject = new JSONObject(res);
+        JSONArray list = jsonObject.getJSONArray("result");
+        int ret_len = list.length();
+        if(ret_len != gpsPoints.size()){
+            System.out.println("[ERROR] something error, src_len not equal ret_len!");
+            return null;
+        }
+        for(int i=0;i<ret_len;i++){
+            JSONObject jso = list.getJSONObject(i);
+            GpsPoint gpsPoint = gpsPoints.get(i);
+            BdPoint bdPoint = new BdPoint();
+            bdPoint.setGps_id(gpsPoint.getId());
+            bdPoint.setLat(jso.getDouble("y"));
+            bdPoint.setLng(jso.getDouble("x"));
+            bdPoints.add(bdPoint);
+        }
+        return bdPoints;
+    }
+    public static void syncBdToGps(List<BdPoint> bdPoints){
+        String prefix = "UPDATE gps_mapping SET ";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        nf.setGroupingUsed(false);
+        boolean ret = true;
+
+        String sql = "";
+        for(BdPoint point: bdPoints){
+            sql = sql + prefix + " bd_lat = " + nf.format(point.getLat()) + ",bd_lng = " +  nf.format(point.getLng()) + " where id = " + point.getGps_id()+";";
+        }
+        mysqlConnector.updateSQL(sql);
+        mysqlConnector.disconnSQL();
+
+    }
+    public static void gps_to_bd_all() throws Exception {
+        List<GpsPoint> gpsPoints = getGpsPoints();
+        List<BdPoint> bdPoints = new ArrayList<>();
+        int len  = gpsPoints.size();
+        System.out.println("There are " + len + " gps points to process");
+        if(len <= 0 ) {
+            return;
+        }
+        int count = 0;
+        List<GpsPoint> gpsPoints_tmp = new ArrayList<>();
+        List<BdPoint> bdPoints_tmp ;
+        for(int i=0; i< len;i++){
+            GpsPoint gpsPoint = gpsPoints.get(i);
+            gpsPoints_tmp.add(gpsPoint);
+            count++;
+            if(count==99 || i==len-1){
+                bdPoints_tmp = gps_to_bd(gpsPoints_tmp);
+                if(bdPoints_tmp !=null && bdPoints_tmp.size()>0)
+                {
+//                    bdPoints.addAll(bdPoints_tmp);
+                    syncBdToGps(bdPoints_tmp);
+                }
+                count = 0;
+                gpsPoints_tmp = new ArrayList<>();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        gps_to_bd_all();
 
 //        List<Point> wspInfo = loadWSInfo();
 //        System.out.println("weather station count: " + wspInfo.size());
@@ -657,7 +758,7 @@ public class MapUtil {
 //        }
 //        syncPointInfoToDB("highway",highwayinfo);
 //
-        lineToColumnForRain();
+//        lineToColumnForRain();
         System.out.println("Done");
 
     }
