@@ -1,6 +1,7 @@
 package com.map;
 
 import com.util.MysqlConnector;
+import com.util.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -10,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -31,7 +33,8 @@ public class MapUtil {
     public static java.text.NumberFormat nf = java.text.NumberFormat.getInstance();
 
     public static String BAIDU_CONV_URL = "http://api.map.baidu.com/geoconv/v1/?coords=";
-    public static String AK = "&ak=MGLOQ2LDO2W4w1ut42Y3kGPAxBk0G5N8";
+//    public static String AK = "&ak=MGLOQ2LDO2W4w1ut42Y3kGPAxBk0G5N8";
+    public static String AK = "&ak=zsphMD5rbLpZNNYP5C73DKhq";
 
 //    create view motorway_rain as
 //    select m.id,m.name,m.road_id,m.bd_lng,m.bd_lat,w.rain_probability
@@ -375,6 +378,7 @@ public class MapUtil {
         }
         return mapinfo;
     }
+
     public static List<Point> loadWSInfo(){
         List<Point> wspinfo = new ArrayList<>();
         String s = "select * from town_location";
@@ -401,6 +405,135 @@ public class MapUtil {
         }
         return wspinfo;
     }
+
+    public static List<Point> loadpointInfo(){
+        List<Point> hwpinfo = new ArrayList<>();
+        String s = "select id,lat,lng from highway";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String pid = rs.getString(1);
+                Point point = new Point(rs.getInt(1),rs.getDouble(2),rs.getDouble(3));
+                hwpinfo.add(point);
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null)
+            {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return hwpinfo;
+    }
+
+    // map key = (int)bd_lat + (int)bd_lng
+    public static Map<String,List<Point>> loadgpspointInfo(){
+        Map<String,List<Point>> gps_pinfo = new HashMap<>();
+        String s = "select id,bd_lat,bd_lng from gps_mapping";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String pid = rs.getString(1);
+                double bd_lat = rs.getDouble(2);
+                double bd_lng = rs.getDouble(3);
+                Point point = new Point(rs.getInt(1),bd_lat,bd_lng);
+                String lat = "" + (int)bd_lat;
+                String lng = "" + (int)bd_lng;
+                String key = lat + lng;
+                if(gps_pinfo.containsKey(key))
+                {
+                    List<Point> points = gps_pinfo.get(key);
+                    points.add(point);
+                }else
+                {
+                    List<Point> points = new ArrayList<>();
+                    points.add(point);
+                    gps_pinfo.put(key,points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+            return gps_pinfo;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null)
+            {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return null;
+    }
+    // map key = "" + lat
+    public static Map<String,List<Point>> loadgpspointInfo2(){
+        Map<String,List<Point>> gps_pinfo = new HashMap<>();
+        String s = "select id,gps_lat,gps_lng from gps_mapping";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String pid = rs.getString(1);
+                double gps_lat = rs.getDouble(2);
+                double gps_lng = rs.getDouble(3);
+                Point point = new Point(rs.getInt(1),gps_lat,gps_lng);
+                //String lat = "" + (int)bd_lat;
+                //String lng = "" + (int)bd_lng;
+                String key = "" + gps_lat;
+                if(gps_pinfo.containsKey(key))
+                {
+                    List<Point> points = gps_pinfo.get(key);
+                    points.add(point);
+                }else
+                {
+                    List<Point> points = new ArrayList<>();
+                    points.add(point);
+                    gps_pinfo.put(key,points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+            return gps_pinfo;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null)
+            {
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return null;
+    }
+    // map key = "" + lat
+    public static void syncgpspointInfo2db(int tableNum ,Map<String,List<Point>> gps_pinfo){
+        String prefix = "insert into gps_point_rain" + tableNum + "(gps_id,gps_lat,gps_lng,rain) value ";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        DecimalFormat decimalFormat=new DecimalFormat(".0");
+        for(String key:gps_pinfo.keySet()){
+            List<Point> points = gps_pinfo.get(key);
+            String sql = prefix;
+            for(Point point:points)
+            {
+                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
+            }
+            sql = sql.substring(0,sql.length()-1)+ ";";
+            mysqlConnector.insertSQL(sql);
+        }
+        if(mysqlConnector !=null){
+            mysqlConnector.disconnSQL();
+        }
+        System.out.println("DONE!");
+    }
+
+
 
     public static int getLevel(Double pp) {
         if (pp >= 60d)
@@ -731,7 +864,7 @@ public class MapUtil {
             GpsPoint gpsPoint = gpsPoints.get(i);
             gpsPoints_tmp.add(gpsPoint);
             count++;
-            if(count==99 || i==len-1){
+            if(count==1 || i==len-1){
                 bdPoints_tmp = gps_to_bd(gpsPoints_tmp);
                 if(bdPoints_tmp !=null && bdPoints_tmp.size()>0)
                 {
@@ -743,10 +876,89 @@ public class MapUtil {
             }
         }
     }
+    public static void generateGpsPoint(){
+        String prefix = "insert into gps_mapping(gps_lng,gps_lat) value ";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        DecimalFormat decimalFormat=new DecimalFormat(".0");
+        int count =0;
+        for(float lng = 70; lng < 140.1; lng = (float) (0.1 + lng )){
+            String sql = prefix;
+            for(float lat = 15; lat < 55; lat = (float)(lat + 0.1)){
+                sql =  sql + " (" + decimalFormat.format(lng) + "," + decimalFormat.format(lat) + "),";
+            }
+            sql = sql.substring(0,sql.length()-1)+ ";";
+            mysqlConnector.insertSQL(sql);
+        }
+        if(mysqlConnector !=null){
+            mysqlConnector.disconnSQL();
+        }
+    }
 
+    public static int getGpsPointId(Point point, Map<String,List<Point>> gps_pinfo){
+        double bd_lat = point.getPoint_x();
+        double bd_lng = point.getPoint_y();
+        String lat = "" + (int)bd_lat;
+        String lng = "" + (int)bd_lng;
+        String key = lat + lng;
+        List<Point> points = gps_pinfo.get(key);
+        double minDistance = 10000.0;
+        int gpsId = 0;
+        double distance = 0;
+        for(Point point1:points){
+            double bd_lat1 = point1.getPoint_x();
+            double bd_lng1 = point1.getPoint_y();
+            distance = (bd_lat1 - bd_lat)*(bd_lat1 - bd_lat) + (bd_lng1-bd_lng)*(bd_lng1-bd_lng);
+            if(distance < minDistance){
+                minDistance = distance;
+                gpsId = point1.getId();
+            }
+        }
+        return gpsId;
+
+    }
+    public static void syncGpsIdToHighwayDB(List<Point> list){
+        String prefix = "UPDATE highway SET gps_id = CASE id ";
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        nf.setGroupingUsed(false);
+        boolean ret = true;
+
+        String sql = new String(prefix);
+        int count = 0;
+        String where = "where id in (";
+        for(Point point: list){
+            sql = sql + " WHEN " + point.getId() + " THEN " + point.getGps_id();
+            count++;
+            where = where + point.getId() + ",";
+            if(count>500){
+                sql = sql + " END\n" ;
+                sql = sql + where.substring(0,where.length()-1)+ ")";
+                ret = mysqlConnector.updateSQL(sql);
+                sql= new String(prefix);
+                count=0;
+                where = "where id in (";
+                if(!ret)break;
+            }
+
+        }
+        if(count>0) {
+            sql = sql + " END\n";
+            sql = sql + where.substring(0,where.length()-1)+ ")";
+            ret = mysqlConnector.updateSQL(sql);
+        }
+    }
     public static void main(String[] args) throws Exception {
-        gps_to_bd_all();
-
+//        generateGpsPoint();
+   //      gps_to_bd_all();
+        Map<String,List<Point>> gps_pinfo = loadgpspointInfo();
+        List<Point> hwpinfo = loadpointInfo();
+        for(Point point:hwpinfo)
+        {
+            int gps_id = getGpsPointId(point,gps_pinfo);
+            point.setGps_id(gps_id);
+        }
+        syncGpsIdToHighwayDB(hwpinfo);
 //        List<Point> wspInfo = loadWSInfo();
 //        System.out.println("weather station count: " + wspInfo.size());
 //
@@ -758,7 +970,8 @@ public class MapUtil {
 //        }
 //        syncPointInfoToDB("highway",highwayinfo);
 //
-//        lineToColumnForRain();
+//      lineToColumnForRain();
+
         System.out.println("Done");
 
     }

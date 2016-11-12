@@ -27,8 +27,9 @@ public class RainHandler extends ProxyHandler {
         URI url = exchange.getRequestURI();
         String query = url.getQuery();
         String jpc = Utils.findParamValue(query,"jpc");
-        //String level = Utils.findParamValue(query,"level");
-        //int lev = Integer.valueOf(level);
+        String index = Utils.findParamValue(query,"index");
+        int index_level = -1;
+        if(index!=null)index_level = Integer.valueOf(index);
         Parser parser = Parser.getInstance();
 //        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("highway_rain");
         Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("map_rain");
@@ -51,8 +52,14 @@ public class RainHandler extends ProxyHandler {
                     list.add(point.getPoint_x());
                     list.add(point.getPoint_y());
                     int[] level = point.getLevel();
-                    for(int j=0;j<level.length;j++){
-                        list.add((double)level[j]);
+                    if(index_level<11 && index_level >-1){
+                        for(int j=0;j<1;j++) {
+                            list.add((double) level[index_level]);
+                        }
+                    }else{
+                            for(int j=0;j<level.length;j++){
+                                list.add((double)level[j]);
+                            }
                     }
                     line_points.put(list);
                 }

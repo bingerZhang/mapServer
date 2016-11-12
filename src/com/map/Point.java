@@ -14,9 +14,33 @@ public class Point {
     double bd_y;
     int ws_id; //weather_station id
     int level[];
+    int gps_id;
+    double rainfall = 0.0;
 
     Point(){
 
+    }
+
+    public double getRainfall() {
+        return rainfall;
+    }
+
+    public void setRainfall(double rainfall) {
+        this.rainfall = rainfall;
+    }
+
+    public int getGps_id() {
+        return gps_id;
+    }
+
+    public void setGps_id(int gps_id) {
+        this.gps_id = gps_id;
+    }
+
+    public Point(int id, double lat, double lng){
+        this.point_id = id;
+        this.point_x = lat;
+        this.point_y = lng;
     }
 
     public Point(int point_id, double point_x, double point_y, double point_z, double bd_x, double bd_y, int ws_id,int level_size) {
