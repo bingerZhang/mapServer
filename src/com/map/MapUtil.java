@@ -44,6 +44,13 @@ public class MapUtil {
 //    select h.id,h.name,h.PID,h.lng,h.lat,tr.rain_p0,tr.rain_p1,tr.rain_p2,tr.rain_p3,tr.rain_p4,tr.rain_p5,tr.rain_p6,tr.rain_p7,tr.rain_p8,tr.rain_p9,tr.rain_p10,tr.rain_p11
 //    from highway h inner join town_rain tr on tr.wsp_id = h.wsp_id ;
 
+//    create view map_rain_test as
+//    select h.id,h.name,h.PID,h.lng,h.lat,tr1.rain rain_p1,tr2.rain rain_p2
+//    from
+//            (highway h inner join gps_point_rain1 tr1 on tr1.gps_id = h.gps_id)
+//    inner join gps_point_rain2 tr2 on tr2.gps_id = h.gps_id
+//    ;
+
     public static double getDistance(double lat1, double lng1, double lat2, double lng2)
     {
         double radLat1 = rad(lat1);

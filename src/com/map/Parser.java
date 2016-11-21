@@ -138,8 +138,8 @@ public class Parser {
             return retlines;
         }
 
-    public Map<String, List<List<Point>>> getRainInfo(String table) {
-        if(lastUpdate == null){
+    public Map<String, List<List<Point>>> getRainInfo(String table,boolean refresh) {
+        if(lastUpdate == null || refresh){
             lastUpdate = new Date();
         }else {
             Date now = new Date();

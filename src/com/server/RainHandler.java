@@ -21,18 +21,19 @@ public class RainHandler extends ProxyHandler {
     public RainHandler() {
         super();
     }
-    public static double AD_LNG = 0.012580687519;      //jing
-    public static double AD_LAT = 0.006686316879;      //wei
     protected void logicalhandle(HttpExchange exchange) throws IOException, JSONException {
         URI url = exchange.getRequestURI();
         String query = url.getQuery();
         String jpc = Utils.findParamValue(query,"jpc");
         String index = Utils.findParamValue(query,"index");
+        String cache = Utils.findParamValue(query,"cache");
+        boolean refresh = false;
+        if(cache.equals("true"))refresh = true;
         int index_level = -1;
         if(index!=null)index_level = Integer.valueOf(index);
         Parser parser = Parser.getInstance();
 //        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("highway_rain");
-        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("map_rain");
+        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("map_rain",refresh);
         logger.info("Raining road size: " + rainRoads.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
