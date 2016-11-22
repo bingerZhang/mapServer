@@ -540,7 +540,16 @@ public class MapUtil {
         System.out.println("DONE!");
     }
 
-
+    public static int getLevelForGps(Double pp) {
+        if (pp >= 15d)
+        {
+            return 2;
+        }else if(pp>=5d){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
 
     public static int getLevel(Double pp) {
         if (pp >= 60d)
@@ -595,7 +604,44 @@ public class MapUtil {
         }
         return highwayInfo;
     }
-
+    public static Map<String, List<Point>> getRainInfo(int index,String table){
+        Map<String,List<Point>> highwayInfo = new HashMap<>();
+        String s = "select * from " + table ;
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        ResultSet rs = mysqlConnector.query(s);
+        try {
+            while (rs.next()) {
+                String name = rs.getString("NAME");
+                int pid = rs.getInt("PID");
+                Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0,12);
+                List<Point> points = null;
+                int[] level = new int[12];
+                String pp = "rain";
+                double rp = rs.getDouble(pp);
+                int level_p = getLevelForGps(rp);
+                level[index]=level_p;
+                point.setLevel(level);
+                if(highwayInfo.containsKey(name)){
+                    points = highwayInfo.get(name);
+                    points.add(point);
+                }else {
+                    points = new ArrayList<>();
+                    points.add(point);
+                    highwayInfo.put(name, points);
+                }
+            }
+            mysqlConnector.disconnSQL();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+            if(mysqlConnector !=null){
+                mysqlConnector.close_query();
+                mysqlConnector.disconnSQL();
+            }
+        }
+        return highwayInfo;
+    }
 
     public static Map<String, List<Point>> getRainInfoByLevel(String table,String date,String hour,int level){
         Map<String,List<Point>> highwayInfo = new HashMap<>();

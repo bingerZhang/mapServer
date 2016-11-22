@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
  */
 public class Parser {
     private static Map<String, List<List<Point>>> map_rain_info = new HashMap<>();
+    private static List<Map<String, List<List<Point>>>> map_rain_level_info = new ArrayList<>();
+    private static Date[] lastLevelUpdate = new Date[12];
     private static Date lastUpdate = null;
     private static Logger logger = Logger.getLogger("Parser");
         public static Parser parser = null;
@@ -137,6 +139,32 @@ public class Parser {
             }
             return retlines;
         }
+
+    public Map<String, List<List<Point>>> getRainInfo(String table,int level,boolean refresh) {
+        String tableName = table + level;
+        int index = level - 1;
+        if(lastLevelUpdate[index] == null || refresh ||map_rain_level_info.size()==0){
+            lastLevelUpdate[index]  = new Date();
+        }else {
+            Date now = new Date();
+            if(now.getTime()-lastLevelUpdate[index].getTime()<3600000){
+                return map_rain_level_info.get(index);
+            }else {
+                lastLevelUpdate[index]  = new Date();
+            }
+        }
+        Map<String,List<Point>> roadsInfo = MapUtil.getRainInfo(index,table);
+        logger.info("Raining Road data load done!");
+        Map<String, List<List<Point>>> retlines = new HashMap<String, List<List<Point>>>();
+        for (Map.Entry<String, List<Point>> entry : roadsInfo.entrySet()) {
+            String name = entry.getKey();
+            List<Point> points= entry.getValue();
+            List<List<Point>> list = MapUtil.adjustment(points,0d);
+            retlines.put(name,list);
+        }
+        map_rain_level_info.add(index,retlines);
+        return retlines;
+    }
 
     public Map<String, List<List<Point>>> getRainInfo(String table,boolean refresh) {
         if(lastUpdate == null || refresh){

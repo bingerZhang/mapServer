@@ -32,8 +32,12 @@ public class RainHandler extends ProxyHandler {
         int index_level = -1;
         if(index!=null)index_level = Integer.valueOf(index);
         Parser parser = Parser.getInstance();
-//        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("highway_rain");
-        Map<String, List<List<Point>>> rainRoads =  parser.getRainInfo("map_rain",refresh);
+        Map<String, List<List<Point>>> rainRoads = null;
+        if(index_level>-1 && index_level <12){
+            rainRoads =  parser.getRainInfo("highway_gps_rain",index_level+1,refresh);
+        }else {
+            rainRoads =  parser.getRainInfo("map_rain",refresh);
+        }
         logger.info("Raining road size: " + rainRoads.size());
         JSONObject json = new JSONObject();
         JSONArray lines = new JSONArray();
