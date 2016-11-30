@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="MapServer" default="Build" basedir=".">
+<project name="MapServer" default="build" basedir=".">
     <property name="productName" value="mapserver"/>
     <property name="productVersion" value="1.0.0"/>
     <property name="srcDir" location="./src/" />
@@ -29,11 +29,11 @@
         <!--</fileset>-->
     </path>
 
-    <target name="Init">
+    <target name="init">
         <delete dir="${buildDir}" />
         <mkdir dir="${buildDir}" />
     </target>
-    <target name="Compile" depends="Init">
+    <target name="compile" depends="init">
         <mkdir dir="${buildDir}"/>
         <mkdir dir="${buildDir}/classes"/>
         <mkdir dir="${buildDir}/lib"/>
@@ -46,7 +46,7 @@
         </copy>
         <!--<javac srcdir="${srcDir}" destdir="${binDir}" />-->
     </target>
-    <target name="MakeJar" depends="Init,Compile">
+    <target name="release" depends="init,compile">
         <jar destfile="${buildDir}/${productName}.jar" basedir="${buildDir}/classes" update="true">
             <zipgroupfileset dir="${libDir}" includes="*.jar"/>
             <manifest>
@@ -55,7 +55,7 @@
             </manifest>
         </jar>
     </target>
-    <target name="Build" depends="Init,Compile,MakeJar">
+    <target name="build" depends="init,compile,release">
         <echo message="Ant is building the project." />
         <delete dir="${buildDir}/classes" />
         <delete dir="${buildDir}/lib" />

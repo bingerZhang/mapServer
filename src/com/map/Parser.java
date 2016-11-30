@@ -4,6 +4,7 @@ import com.util.MysqlConnector;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -467,14 +468,29 @@ public class Parser {
     public static void main(String[] args) throws Throwable {
         //testLoadGpsRainInfo();
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");//设置日期格式
-        String date = df.format(new Date());// new Date()为获取当前系统时间
-        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + date;
+        Date date = new Date();
+        String today = df.format(date);// new Date()为获取当前系统时间
+        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + today;
         String first ="08.";
         String second = "20.";
         String[] exts = new String[]{"006","012","018","024","030","036","042","048","054","060","066","072"};
-        String preFile = "grid24_" + date;
-        File file = new File(prePath);
-        if(file.exists()&& file.isDirectory()){
+        String preFile = "grid06_" + today;
+        File directory = new File(prePath);
+        int hour = date.getHours();
+        String createdTime;
+        if(!directory.exists()&& !directory.isDirectory()){
+            if(hour<20){
+                createdTime = first;
+            }else {
+                createdTime = second;
+            }
+            String fileh = preFile + createdTime;
+            List<String> files = new ArrayList<>();
+            for(int i=0;i<exts.length;i++){
+                String file = fileh + exts[i];
+                files.add(file);
+            }
+            return;
 
         }
 
