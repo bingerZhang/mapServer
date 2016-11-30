@@ -16,6 +16,7 @@ public class TrackerServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getByName("0.0.0.0"), 8070), 5);
         server.createContext("/r_api_lines", new LinesHandler());
         server.createContext("/r_api_rain",new RainHandler());
+        server.createContext("/r_api_points",new PointsHandler());
 
         server.setExecutor(Executors.newFixedThreadPool(50, new DefaultThreadFactory("mapserver")));
         server.start();
