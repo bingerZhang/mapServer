@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -345,7 +346,138 @@ public class Parser {
         return;
     }
 
-        public static void main(String[] args) throws Throwable {
+    public static Map<String,Map<String,Point>> loadGpsRainInfo(List<String> files) throws IOException {
+        Map<String,Map<String,Point>> listMap = new HashMap<>();
+        int max = files.size();
+        for(int i=0;i<max;i++){
+            readtxtFile(files.get(i),listMap,i,12);
+        }
+        return listMap;
+    }
+
+    public static Map<String,Map<String,Point>> readtxtFile(String file,Map<String,Map<String,Point>> listMap,int timeIndex,int max) throws IOException {
+        InputStreamReader fr = new InputStreamReader(new FileInputStream(file));
+        BufferedReader br = new BufferedReader(fr);
+        String rec = null;// 一行
+        String str;// 一个单元格
+        if(listMap==null) listMap = new HashMap<>();
+        try {
+            // 读取一行
+            double lng_start = 70.0;
+            double lng_end = 140.1;
+            double lat_start = 60.0;
+            double lat_end = 0.0;
+            boolean end = false;
+            //跳过前两行
+            rec = br.readLine();
+            rec = br.readLine();
+            int count = 0;
+            boolean error = false;
+            DecimalFormat decimalFormat=new DecimalFormat(".0");
+            for(double lat=lat_start;lat > lat_end; lat=lat-0.1) {
+                count++;
+                rec = br.readLine();
+                if (rec == null) break;
+                String[] rain = rec.trim().split("\\s+");
+//                String key = "" + decimalFormat.format(lat);
+                int num = rain.length;
+                String fkey = "" + (int) lat + "_";
+                String skey = "" + decimalFormat.format(lat) +"_";
+                for (int index = 0; index < num; index++) {
+                    String tmpfKey = fkey + (70 + index / 10);
+                    Map<String, Point> points;
+                    String tmpskey = skey + decimalFormat.format(70 + (double) index / 10);
+                    int rainlevel = getLevelForGps(Double.valueOf(rain[index]));
+                    if (rainlevel > 1){
+                        System.out.println("2");
+                    }else if(rainlevel >0 ){
+                        System.out.println("1");
+                    }
+                    if (listMap.containsKey(tmpfKey)) {
+                        points = listMap.get(tmpfKey);
+                        if(points.containsKey(tmpskey)){
+                            Point point = points.get(tmpskey);
+                            point.setLevel(timeIndex, rainlevel);
+                        }else {
+                            Point point = new Point(lat, 70.0 + (double) index / 10, max);
+                            point.setLevel(timeIndex, rainlevel);
+                            points.put(tmpskey,point);
+                        }
+                    } else {
+                        points = new HashMap<>();
+                        Point point = new Point(lat, 70.0 + (double) index / 10, max);
+                        point.setLevel(timeIndex, rainlevel);
+                        points.put(tmpskey,point);
+                        listMap.put(tmpfKey, points);
+                    }
+                }
+            }
+            return listMap;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (fr != null) {
+                fr.close();
+            }
+            if (br != null) {
+                br.close();
+            }
+        }
+        return null;
+    }
+    public static int getLevelForGps(Double pp) {
+        if (pp >= 15d)
+        {
+            return 2;
+        }else if(pp>=5d){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
+    public static void testLoadGpsRainInfo() throws IOException {
+        List<String> files = new ArrayList<>();
+        files.add("D:/160831/grid24_2016083108.024");
+        files.add("D:/160831/grid24_2016083108.048");
+        files.add("D:/160831/grid24_2016083108.072");
+        files.add("D:/160831/grid24_2016083108.096");
+        files.add("D:/160831/grid24_2016083108.120");
+        files.add("D:/160831/grid24_2016083108.144");
+        Map<String, Map<String, Point>> maps = new HashMap<>();
+        maps = loadGpsRainInfo(files);
+        return;
+
+    }
+    public void testreadtxtFile() throws IOException {
+        readtxtFile("D:/160831/grid24_2016083108.024",1);
+        readtxtFile("D:/160831/grid24_2016083108.048",2);
+        readtxtFile("D:/160831/grid24_2016083108.072",3);
+        readtxtFile("D:/160831/grid24_2016083108.096",4);
+        readtxtFile("D:/160831/grid24_2016083108.120",5);
+        readtxtFile("D:/160831/grid24_2016083108.144",6);
+        readtxtFile("D:/160831/grid24_2016083108.024",7);
+        readtxtFile("D:/160831/grid24_2016083108.048",8);
+        readtxtFile("D:/160831/grid24_2016083108.072",9);
+        readtxtFile("D:/160831/grid24_2016083108.096",10);
+        readtxtFile("D:/160831/grid24_2016083108.120",11);
+        readtxtFile("D:/160831/grid24_2016083108.144",12);
+
+    }
+    public static void main(String[] args) throws Throwable {
+        //testLoadGpsRainInfo();
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");//设置日期格式
+        String date = df.format(new Date());// new Date()为获取当前系统时间
+        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + date;
+        String first ="08.";
+        String second = "20.";
+        String[] exts = new String[]{"006","012","018","024","030","036","042","048","054","060","066","072"};
+        String preFile = "grid24_" + date;
+        File file = new File(prePath);
+        if(file.exists()&& file.isDirectory()){
+
+        }
+
 //            Parser parser = Parser.getInstance();
 //            List<List<String>> csvList = parser.readCSVFile("D:/BeiJing.csv");
 //            List<List<String>> csvList = (List<List<String>>) MapUtil.readObject(new File("D:/BeiJing.map"));
@@ -360,18 +492,6 @@ public class Parser {
 //            }
 //            boolean ret = csvToDB("D:/Road_Point_high_0.csv");
 //            System.out.println(ret?"success":"failed");
-            readtxtFile("D:/160831/grid24_2016083108.024",1);
-            readtxtFile("D:/160831/grid24_2016083108.048",2);
-            readtxtFile("D:/160831/grid24_2016083108.072",3);
-            readtxtFile("D:/160831/grid24_2016083108.096",4);
-            readtxtFile("D:/160831/grid24_2016083108.120",5);
-            readtxtFile("D:/160831/grid24_2016083108.144",6);
-            readtxtFile("D:/160831/grid24_2016083108.024",7);
-            readtxtFile("D:/160831/grid24_2016083108.048",8);
-            readtxtFile("D:/160831/grid24_2016083108.072",9);
-            readtxtFile("D:/160831/grid24_2016083108.096",10);
-            readtxtFile("D:/160831/grid24_2016083108.120",11);
-            readtxtFile("D:/160831/grid24_2016083108.144",12);
 
 //            double lng = 72.9;
 //            int index = (int)((lng*10 - 700));

@@ -37,6 +37,12 @@ public class Point {
         this.gps_id = gps_id;
     }
 
+    public Point(double x,double y,int size){
+        this.point_x = x;
+        this.point_y = y;
+        level = new int[size];
+    }
+
     public Point(int id, double lat, double lng){
         this.point_id = id;
         this.point_x = lat;
@@ -60,6 +66,12 @@ public class Point {
         this.point_y = point_y;
         this.ws_id = ws_id;
         level = new int[level_size];
+    }
+
+    public void setLevel(int timeIndex,int rainLevel){
+        if(level.length > timeIndex){
+            level[timeIndex] = rainLevel;
+        }
     }
 
     public void setLevel(int[] level) {
