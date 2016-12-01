@@ -19,7 +19,9 @@ public class UpdateTool implements Tool {
             return;
         }
         String action = args[0];
-        if ("radius".equals(action)) {
+        if("rain".equals(action)){
+            String index = args[1];
+        }else if ("radius".equals(action)) {
             updateRadius();
         } else {
             System.out.println("[WARN] Invalid cache action: " + action);
