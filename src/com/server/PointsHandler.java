@@ -8,6 +8,7 @@ import com.util.SizeLimitedInputStream;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import java.io.IOException;
@@ -27,22 +28,32 @@ public class PointsHandler extends ProxyHandler {
         JSONArray jsonArray = new JSONArray(data.toString());
         int len = jsonArray.length();
         boolean error = false;
-        List<List<String>> weather_data = new ArrayList<>();
+        Map<String,Object> respMap = new HashMap<>();
+        List<List<Integer>> weather_data = new ArrayList<>();
         for(int i =0;i<len;i++) {
             Object object = jsonArray.get(i);
             if(object instanceof JSONArray){
                 if(((JSONArray) object).length()!=3) {
                     error = true;
+                    break;
                 }
                 double x = (double)((JSONArray) object).get(0);
                 double y = (double)((JSONArray) object).get(1);
                 String time = (String)((JSONArray) object).get(2);
                 String date = time.substring(0,8);
                 int hour = Integer.valueOf(time.substring(8));
-                System.out.println("X:" + x + "  " + "Y:"+y  +" Date:"+date + " Hour:" + hour);
+                System.out.println("X:" + x + "  " + "Y:" + y  +" Date:"+date + " Hour:" + hour);
+                List<Integer> level = getLevel(x,y,date,hour);
+                if(level==null || level.size()!=3){
+                    error = true;
+                    break;
+                }
+                weather_data.add(level);
             }
         }
         if(!error) {
+            respMap.put("weather", weather_data);
+            data = toJson(respMap).toString().getBytes();
             exchange.sendResponseHeaders(200, data.length);
             ByteStreams.copy(data, exchange.getResponseBody());
         }else {
@@ -51,43 +62,46 @@ public class PointsHandler extends ProxyHandler {
             ByteStreams.copy(resp, exchange.getResponseBody());
         }
     }
-//    public static JSONObject toJson(Map<String, Object> map){
-//        JSONObject jsonObject = new JSONObject();
-//        Object value = null;
-//        for(String key: map.keySet()){
-//            value = map.get(key);
-//            if(value instanceof List)
-//            {
-//                JSONArray jsonMembers = new JSONArray();
-//                int size = ((List) value).size();
-//                for(int i=0;i<size;i++)
-//                {
-//                    Object node = ((List) value).get(i);
-//                    if(node instanceof Map) jsonMembers.put(toJson((Map) node));
-//                }
-//                try {
-//                    jsonObject.put(key,jsonMembers);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//                }
-//
-//            }else if(value instanceof Map){
-//                try {
-////                    System.out.println(key + " : " + value.toString());
-//                    jsonObject.put(key,toJson((Map)value));
-//                } catch (JSONException e) {
-//                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//                }
-//            }else {
-//                try {
-//                    jsonObject.put(key,value);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//                }
-//            }
-//        }
-//        return jsonObject;
-//    }
+    private List<Integer> getLevel(double x,double y,String date,int hour){
+        return null;
+    }
+    public static JSONObject toJson(Map<String, Object> map){
+        JSONObject jsonObject = new JSONObject();
+        Object value = null;
+        for(String key: map.keySet()){
+            value = map.get(key);
+            if(value instanceof List)
+            {
+                JSONArray jsonMembers = new JSONArray();
+                int size = ((List) value).size();
+                for(int i=0;i<size;i++)
+                {
+                    Object node = ((List) value).get(i);
+                    if(node instanceof Map) jsonMembers.put(toJson((Map) node));
+                }
+                try {
+                    jsonObject.put(key,jsonMembers);
+                } catch (JSONException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+
+            }else if(value instanceof Map){
+                try {
+//                    System.out.println(key + " : " + value.toString());
+                    jsonObject.put(key,toJson((Map)value));
+                } catch (JSONException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }else {
+                try {
+                    jsonObject.put(key,value);
+                } catch (JSONException e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }
+        }
+        return jsonObject;
+    }
 //    public static Map toMap(String jsonString) throws IOException, JSONException {
 //
 //        JSONObject jsonObject = new JSONObject(jsonString);
