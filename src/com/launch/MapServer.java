@@ -3,6 +3,8 @@ package com.launch;
 import com.map.MapUtil;
 import com.map.Parser;
 import com.map.Point;
+import com.server.DefaultThreadFactory;
+import com.server.ReloadTask;
 import com.server.TrackerServer;
 import org.apache.log4j.Logger;
 
@@ -10,10 +12,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MapServer implements Main {
 //public class MapServer {
-        private static Logger logger = Logger.getLogger("MapServer");
+    private static Logger logger = Logger.getLogger("MapServer");
+    private static ScheduledExecutorService scheduler;
     public void main(String[] args) throws IOException {
 //    public static void main(String[] args) throws IOException {
         Parser parser = Parser.getInstance();
@@ -48,7 +54,8 @@ public class MapServer implements Main {
 //        Application.motorwayInfo = MapUtil.loadRoadInfo("motorway");
 //        Application.motorwaylines =parser.getRoadsInfo("motorway");
 //        logger.info("motorway road count: " + Application.motorwaylines.size());
-
+        scheduler = Executors.newScheduledThreadPool(2, new DefaultThreadFactory("tracker-reload-task"));
+        scheduler.scheduleWithFixedDelay(new ReloadTask(),3,3600, TimeUnit.SECONDS);
         TrackerServer.startServer();
     }
 }

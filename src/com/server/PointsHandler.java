@@ -1,5 +1,7 @@
 package com.server;
 
+import com.map.Parser;
+import com.map.Point;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.util.ByteStreams;
@@ -14,18 +16,23 @@ import javax.persistence.criteria.CriteriaBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.oracle.jrockit.jfr.DataType.UTF8;
 
 public class PointsHandler extends ProxyHandler {
     private static Logger logger = Logger.getLogger("LinesHandler");
+    private static Parser parser = Parser.getInstance();
+    private static SimpleDateFormat sdf = new SimpleDateFormat( "yyyyMMddHH" );
     public PointsHandler() {
         super();
     }
     protected void logicalhandle(HttpExchange exchange) throws IOException, JSONException {
-        URI url = exchange.getRequestURI();
         InputStream in = exchange.getRequestBody();
         byte[] data = ByteStreams.toBytes(new SizeLimitedInputStream(in, 1024));
-        JSONArray jsonArray = new JSONArray(data.toString());
+        String dataStr = new String(data);
+        JSONArray jsonArray = new JSONArray(dataStr);
         int len = jsonArray.length();
         boolean error = false;
         Map<String,Object> respMap = new HashMap<>();
@@ -40,14 +47,14 @@ public class PointsHandler extends ProxyHandler {
                 double x = (double)((JSONArray) object).get(0);
                 double y = (double)((JSONArray) object).get(1);
                 String time = (String)((JSONArray) object).get(2);
-                String date = time.substring(0,8);
-                int hour = Integer.valueOf(time.substring(8));
-                System.out.println("X:" + x + "  " + "Y:" + y  +" Date:"+date + " Hour:" + hour);
-                List<Integer> level = getLevel(x,y,date,hour);
-                if(level==null || level.size()!=3){
+                //System.out.println("X:" + x + "  " + "Y:" + y  +" Date:"+time);
+                int l = getLevel(x,y,time);
+                if(l<0){
                     error = true;
                     break;
                 }
+                List<Integer> level = new ArrayList<>();
+                level.add(l);
                 weather_data.add(level);
             }
         }
@@ -62,8 +69,44 @@ public class PointsHandler extends ProxyHandler {
             ByteStreams.copy(resp, exchange.getResponseBody());
         }
     }
-    private List<Integer> getLevel(double x,double y,String date,int hour){
-        return null;
+    private int getLevel(double x,double y,String dateStamp){
+        try {
+            Date drivedate = sdf.parse(dateStamp);
+            Date today = new Date();
+            long hours = (drivedate.getTime()-today.getTime())/1000/60/60;
+            if(hours<0)return 0;
+            int hour = today.getHours();
+            if(hour < 8){
+                hours = hours + hour + 4;
+            }else if(hour < 20){
+                hours = hours + hour - 8;
+            }else {
+                hours = hours + hour - 20;
+            }
+            int index = (int) hours/6;
+            if(index>11)index = 11;
+//            System.out.println(index);
+            return parser.getPointlevel(x,y,index);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
+    public static JSONArray toJsonArray(List<Objects> list){
+        JSONArray jsonArray = new JSONArray();
+        int size = list.size();
+        for(int i=0;i<size;i++)
+        {
+            Object node = list.get(i);
+            if(node instanceof Map) {
+                jsonArray.put(toJson((Map) node));
+            }else if(node instanceof List){
+                jsonArray.put(toJsonArray((List) node));
+            }else {
+                jsonArray.put(node);
+            }
+        }
+        return jsonArray;
     }
     public static JSONObject toJson(Map<String, Object> map){
         JSONObject jsonObject = new JSONObject();
@@ -72,13 +115,7 @@ public class PointsHandler extends ProxyHandler {
             value = map.get(key);
             if(value instanceof List)
             {
-                JSONArray jsonMembers = new JSONArray();
-                int size = ((List) value).size();
-                for(int i=0;i<size;i++)
-                {
-                    Object node = ((List) value).get(i);
-                    if(node instanceof Map) jsonMembers.put(toJson((Map) node));
-                }
+                JSONArray jsonMembers = toJsonArray((List) value);
                 try {
                     jsonObject.put(key,jsonMembers);
                 } catch (JSONException e) {
