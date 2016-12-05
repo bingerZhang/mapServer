@@ -520,19 +520,34 @@ public class MapUtil {
     }
     // map key = "" + lat
     public static void syncgpspointInfo2db(int tableNum ,Map<String,List<Point>> gps_pinfo){
-        String prefix = "insert into gps_point_rain" + tableNum + "(gps_id,gps_lat,gps_lng,rain) value ";
+//        String deleteTableCMD = "truncate table gps_point_rain" + tableNum;
+//        String prefix = "insert into gps_point_rain" + tableNum + "(gps_id,gps_lat,gps_lng,rain) value ";
+        String prefix = "update gps_point_rain" + tableNum + " set rain=";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
-        DecimalFormat decimalFormat=new DecimalFormat(".0");
+        DecimalFormat decimalFormat = new DecimalFormat(".0");
         for(String key:gps_pinfo.keySet()){
             List<Point> points = gps_pinfo.get(key);
-            String sql = prefix;
+//            List<String> cmds = new ArrayList<>();
+            int count = 0;
+            String cmds = "";
             for(Point point:points)
             {
-                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
+                String sql = prefix + point.getRainfall() + "where gps_lat=" + point.getPoint_x() + " and gps_lng=" + point.getPoint_y() + ";";
+//                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
+                cmds = cmds + sql;
+                count++;
+                if(count == 50){
+                    mysqlConnector.insertSQL(cmds);
+                    cmds = "";
+                    count = 0;
+                }
             }
-            sql = sql.substring(0,sql.length()-1)+ ";";
-            mysqlConnector.insertSQL(sql);
+            if(count>0){
+                mysqlConnector.insertSQL(cmds);
+            }
+//            sql = sql.substring(0,sql.length()-1)+ ";";
+
         }
         if(mysqlConnector !=null){
             mysqlConnector.disconnSQL();

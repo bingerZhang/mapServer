@@ -3,8 +3,8 @@ package com.server;
 import com.map.Parser;
 import org.apache.log4j.Logger;
 
-public class ReloadTask implements Runnable {
-    private static Logger logger = Logger.getLogger("ReloadTask");
+public class PointsReloadTask implements Runnable {
+    private static Logger logger = Logger.getLogger("PointsReloadTask");
     private static Parser parser = Parser.getInstance();
     private static boolean running = false;
     @Override
@@ -13,7 +13,7 @@ public class ReloadTask implements Runnable {
         running = true;
         try {
 //            System.out.println("Reloading...");
-            logger.debug("Reloading...");
+            logger.debug("Points Reloading...");
             parser.reloadPoints();
         } catch (Exception e) {
             e.printStackTrace();

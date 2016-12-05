@@ -492,6 +492,10 @@ public class Parser {
         }
     }
 
+    public void reloadRains(){
+
+    }
+
     public void reloadPoints() {
         try {
             logger.debug("loading points info...");
@@ -511,32 +515,8 @@ public class Parser {
     }
 
     public void loadGpsRainPointsInfo() throws IOException {
-        List<String> files = new ArrayList<>();
-        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");//设置日期格式
-        Date date = new Date();
-        String today = df.format(date);// new Date()为获取当前系统时间
-        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + today + "/";
-        String first = "08.";
-        String second = "20.";
-        String[] exts = new String[]{"006", "012", "018", "024", "030", "036", "042", "048", "054", "060", "066", "072"};
-        String preFile = "grid06_" + today;
-        File directory = new File(prePath);
-        int hour = date.getHours();
-        String createdTime;
-        if (directory.exists() && directory.isDirectory()) {
-            if (hour < 8) {
-                return;
-            } else if (hour < 20) {
-                createdTime = first;
-            } else {
-                createdTime = second;
-            }
-            String fileh = preFile + createdTime;
-            for (int i = 0; i < exts.length; i++) {
-                String file = prePath + fileh + exts[i]+" ";
-                files.add(file);
-            }
-        }
+        List<String> files = getFiles();
+        if(files==null)return;
 //        files.add("D:/160831/grid24_2016083108.024");
 //        files.add("D:/160831/grid24_2016083108.048");
 //        files.add("D:/160831/grid24_2016083108.072");
@@ -558,20 +538,59 @@ public class Parser {
         return;
 
     }
+    public List<String> getFiles(){
+        List<String> files = new ArrayList<>();
+        SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");//设置日期格式
+        Date date = new Date();
+        String today = df.format(date);// new Date()为获取当前系统时间
+        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + today + "/";
+        String first = "08.";
+        String second = "20.";
+        String[] exts = new String[]{"006", "012", "018", "024", "030", "036", "042", "048", "054", "060", "066", "072"};
+        String preFile = "grid06_" + today;
+        File directory = new File(prePath);
+        int hour = date.getHours();
+        String createdTime;
+        if (directory.exists() && directory.isDirectory()) {
+            if (hour < 8) {
+                return null;
+            } else if (hour < 20) {
+                createdTime = first;
+            } else {
+                createdTime = second;
+            }
+            String fileh = preFile + createdTime;
+            for (int i = 0; i < exts.length; i++) {
+                String file = prePath + fileh + exts[i];
+                files.add(file);
+            }
+        }
+        return files;
+    }
 
     public void testreadtxtFile() throws IOException {
-        readtxtFile("D:/160831/grid24_2016083108.024", 1);
-        readtxtFile("D:/160831/grid24_2016083108.048", 2);
-        readtxtFile("D:/160831/grid24_2016083108.072", 3);
-        readtxtFile("D:/160831/grid24_2016083108.096", 4);
-        readtxtFile("D:/160831/grid24_2016083108.120", 5);
-        readtxtFile("D:/160831/grid24_2016083108.144", 6);
-        readtxtFile("D:/160831/grid24_2016083108.024", 7);
-        readtxtFile("D:/160831/grid24_2016083108.048", 8);
-        readtxtFile("D:/160831/grid24_2016083108.072", 9);
-        readtxtFile("D:/160831/grid24_2016083108.096", 10);
-        readtxtFile("D:/160831/grid24_2016083108.120", 11);
-        readtxtFile("D:/160831/grid24_2016083108.144", 12);
+        List<String> files = getFiles();
+        if(files==null)return;
+        if (!validate(files)) {
+            logger.debug("validate failed !");
+            return;
+        }
+        for(int i=0;i<12;i++){
+            String file = files.get(i);
+            readtxtFile(file,i+1);
+        }
+//        readtxtFile("D:/160831/grid24_2016083108.024", 1);
+//        readtxtFile("D:/160831/grid24_2016083108.048", 2);
+//        readtxtFile("D:/160831/grid24_2016083108.072", 3);
+//        readtxtFile("D:/160831/grid24_2016083108.096", 4);
+//        readtxtFile("D:/160831/grid24_2016083108.120", 5);
+//        readtxtFile("D:/160831/grid24_2016083108.144", 6);
+//        readtxtFile("D:/160831/grid24_2016083108.024", 7);
+//        readtxtFile("D:/160831/grid24_2016083108.048", 8);
+//        readtxtFile("D:/160831/grid24_2016083108.072", 9);
+//        readtxtFile("D:/160831/grid24_2016083108.096", 10);
+//        readtxtFile("D:/160831/grid24_2016083108.120", 11);
+//        readtxtFile("D:/160831/grid24_2016083108.144", 12);
 
     }
 
