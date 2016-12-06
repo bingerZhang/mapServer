@@ -30,7 +30,7 @@ public class PointsHandler extends ProxyHandler {
     }
     protected void logicalhandle(HttpExchange exchange) throws IOException, JSONException {
         InputStream in = exchange.getRequestBody();
-        byte[] data = ByteStreams.toBytes(new SizeLimitedInputStream(in, 1024));
+        byte[] data = ByteStreams.toBytes(new SizeLimitedInputStream(in, 102400));
         String dataStr = new String(data);
         JSONArray jsonArray = new JSONArray(dataStr);
         int len = jsonArray.length();

@@ -4,6 +4,7 @@ import com.util.MysqlConnector;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -492,10 +493,6 @@ public class Parser {
         }
     }
 
-    public void reloadRains(){
-
-    }
-
     public void reloadPoints() {
         try {
             logger.debug("loading points info...");
@@ -506,7 +503,7 @@ public class Parser {
         }
     }
 
-    public boolean validate(List<String> files) {
+    public static boolean validate(List<String> files) {
         if (files.size() != 12) return false;
         for (String file : files) {
             if (!new File(file).exists()) return false;
@@ -518,11 +515,6 @@ public class Parser {
         List<String> files = getFiles();
         if(files==null)return;
 //        files.add("D:/160831/grid24_2016083108.024");
-//        files.add("D:/160831/grid24_2016083108.048");
-//        files.add("D:/160831/grid24_2016083108.072");
-//        files.add("D:/160831/grid24_2016083108.096");
-//        files.add("D:/160831/grid24_2016083108.120");
-//        files.add("D:/160831/grid24_2016083108.144");
         if (!validate(files)) {
             logger.debug("validate failed !");
             return;
@@ -538,12 +530,18 @@ public class Parser {
         return;
 
     }
-    public List<String> getFiles(){
+    public static List<String> getFiles(){
         List<String> files = new ArrayList<>();
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");//设置日期格式
         Date date = new Date();
         String today = df.format(date);// new Date()为获取当前系统时间
-        String prePath = "/home/ftp/forecastData/1-3Days_rain/" + today + "/";
+        String osName = System.getProperty("os.name");
+        String osPath;
+        if(osName.contains("Windows"))
+            osPath = "D:/sftp/";
+        else
+            osPath = "/home/ftp/forecastData/1-3Days_rain/";
+        String prePath = osPath + today + "/";
         String first = "08.";
         String second = "20.";
         String[] exts = new String[]{"006", "012", "018", "024", "030", "036", "042", "048", "054", "060", "066", "072"};
@@ -568,7 +566,7 @@ public class Parser {
         return files;
     }
 
-    public void testreadtxtFile() throws IOException {
+    public static void updateHighwayWeather() throws IOException {
         List<String> files = getFiles();
         if(files==null)return;
         if (!validate(files)) {
@@ -579,43 +577,29 @@ public class Parser {
             String file = files.get(i);
             readtxtFile(file,i+1);
         }
+        updateHighwayGpsPointWeather();
 //        readtxtFile("D:/160831/grid24_2016083108.024", 1);
-//        readtxtFile("D:/160831/grid24_2016083108.048", 2);
-//        readtxtFile("D:/160831/grid24_2016083108.072", 3);
-//        readtxtFile("D:/160831/grid24_2016083108.096", 4);
-//        readtxtFile("D:/160831/grid24_2016083108.120", 5);
-//        readtxtFile("D:/160831/grid24_2016083108.144", 6);
-//        readtxtFile("D:/160831/grid24_2016083108.024", 7);
-//        readtxtFile("D:/160831/grid24_2016083108.048", 8);
-//        readtxtFile("D:/160831/grid24_2016083108.072", 9);
-//        readtxtFile("D:/160831/grid24_2016083108.096", 10);
-//        readtxtFile("D:/160831/grid24_2016083108.120", 11);
-//        readtxtFile("D:/160831/grid24_2016083108.144", 12);
 
+    }
+    private static void updateHighwayGpsPointWeather(){
+        MysqlConnector mysqlConnector = new MysqlConnector();
+        mysqlConnector.connSQL();
+        String deleteOldData = "delete from highway_gps_point_weather";
+        String insertCmd = "insert into highway_gps_point_weather";
+        String insertColumns = "(name,pid,lat,lng,gps_id,rain,wind,snow,fog,other) " +
+                "select h.NAME name,h.PID pid,h.lat,h.lng,h.gps_id,g.rain,g.wind,g.snow,g.fog,g.other from highway h,gps_point_weather";
+        String insertWhere = " g where h.gps_id=g.gps_id;";
+        for(int i=1;i<13;i++){
+            String deleteSql = deleteOldData + i;
+            String insertSql = insertCmd + i + insertColumns + i + insertWhere;
+            mysqlConnector.deleteSQL(deleteSql);
+            mysqlConnector.insertSQL(insertSql);
+        }
+        mysqlConnector.disconnSQL();
     }
 
     public static void main(String[] args) throws Throwable {
-
+        updateHighwayWeather();
         //testLoadGpsRainInfo();
-
-
-//            Parser parser = Parser.getInstance();
-//            List<List<String>> csvList = parser.readCSVFile("D:/BeiJing.csv");
-//            List<List<String>> csvList = (List<List<String>>) MapUtil.readObject(new File("D:/BeiJing.map"));
-//            Map<String, List<List<Point>>> listMap = parser.getLines(csvList,"^[SGX].+");
-//            System.out.println("listMap size: " + listMap.size());
-//            String name = "S213";
-//            if(name.matches("^[SGX].+"))
-//            {
-//                System.out.println("matched");
-//            } else {
-//                System.out.println("not matche");
-//            }
-//            boolean ret = csvToDB("D:/Road_Point_high_0.csv");
-//            System.out.println(ret?"success":"failed");
-
-//            double lng = 72.9;
-//            int index = (int)((lng*10 - 700));
-//            System.out.println("index " + index);
     }
 }

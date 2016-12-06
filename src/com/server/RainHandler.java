@@ -34,7 +34,7 @@ public class RainHandler extends ProxyHandler {
         Parser parser = Parser.getInstance();
         Map<String, List<List<Point>>> rainRoads = null;
         if(index_level>-1 && index_level <12){
-            rainRoads =  parser.getRainInfo("highway_gps_rain",index_level+1,refresh);
+            rainRoads =  parser.getRainInfo("highway_gps_point_weather",index_level+1,refresh);
         }else {
             rainRoads =  parser.getRainInfo("map_rain",refresh);
         }

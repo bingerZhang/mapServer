@@ -481,7 +481,7 @@ public class MapUtil {
     // map key = "" + lat
     public static Map<String,List<Point>> loadgpspointInfo2(){
         Map<String,List<Point>> gps_pinfo = new HashMap<>();
-        String s = "select id,gps_lat,gps_lng from gps_mapping";
+        String s = "select id,gps_lat,gps_lng from gps_point_weather1";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         ResultSet rs = mysqlConnector.query(s);
@@ -522,7 +522,7 @@ public class MapUtil {
     public static void syncgpspointInfo2db(int tableNum ,Map<String,List<Point>> gps_pinfo){
 //        String deleteTableCMD = "truncate table gps_point_rain" + tableNum;
 //        String prefix = "insert into gps_point_rain" + tableNum + "(gps_id,gps_lat,gps_lng,rain) value ";
-        String prefix = "update gps_point_rain" + tableNum + " set rain=";
+        String prefix = "update gps_point_weather" + tableNum + " set rain=";
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         DecimalFormat decimalFormat = new DecimalFormat(".0");
@@ -533,7 +533,7 @@ public class MapUtil {
             String cmds = "";
             for(Point point:points)
             {
-                String sql = prefix + point.getRainfall() + "where gps_lat=" + point.getPoint_x() + " and gps_lng=" + point.getPoint_y() + ";";
+                String sql = prefix + point.getRainfall() + " where gps_lat=" + point.getPoint_x() + " and gps_lng=" + point.getPoint_y() + ";";
 //                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
                 cmds = cmds + sql;
                 count++;
@@ -552,7 +552,7 @@ public class MapUtil {
         if(mysqlConnector !=null){
             mysqlConnector.disconnSQL();
         }
-        System.out.println("DONE!");
+        System.out.println("Update gps_point_rain" + tableNum + " DONE!");
     }
 
     public static int getLevelForGps(Double pp) {

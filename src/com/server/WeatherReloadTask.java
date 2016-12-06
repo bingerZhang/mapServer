@@ -3,8 +3,8 @@ package com.server;
 import com.map.Parser;
 import org.apache.log4j.Logger;
 
-public class RainsReloadTask implements Runnable {
-    private static Logger logger = Logger.getLogger("PointsReloadTask");
+public class WeatherReloadTask implements Runnable {
+    private static Logger logger = Logger.getLogger("WeatherReloadTask");
     private static Parser parser = Parser.getInstance();
     private static boolean running = false;
     @Override
@@ -13,8 +13,8 @@ public class RainsReloadTask implements Runnable {
         running = true;
         try {
 //            System.out.println("Reloading...");
-            logger.debug("Rains Reloading...");
-            parser.reloadRains();
+            logger.debug("Weather Reloading...");
+            parser.updateHighwayWeather();
         } catch (Exception e) {
             e.printStackTrace();
         }finally {

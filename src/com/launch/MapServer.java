@@ -4,6 +4,7 @@ import com.map.Parser;
 import com.server.DefaultThreadFactory;
 import com.server.PointsReloadTask;
 import com.server.TrackerServer;
+import com.server.WeatherReloadTask;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -51,6 +52,7 @@ public class MapServer implements Main {
 //        logger.info("motorway road count: " + Application.motorwaylines.size());
         scheduler = Executors.newScheduledThreadPool(2, new DefaultThreadFactory("tracker-reload-task"));
         scheduler.scheduleWithFixedDelay(new PointsReloadTask(),3,3600, TimeUnit.SECONDS);
+        scheduler.scheduleWithFixedDelay(new WeatherReloadTask(),1,360, TimeUnit.MINUTES);
         TrackerServer.startServer();
     }
 }
