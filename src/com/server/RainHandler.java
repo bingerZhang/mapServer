@@ -34,9 +34,9 @@ public class RainHandler extends ProxyHandler {
         Parser parser = Parser.getInstance();
         Map<String, List<List<Point>>> rainRoads = null;
         if(index_level>-1 && index_level <12){
-            rainRoads =  parser.getRainInfo("highway_gps_point_weather",index_level+1,refresh);
+            rainRoads =  parser.getRainInfo("highway_map_rain",refresh);
         }else {
-            rainRoads =  parser.getRainInfo("map_rain",refresh);
+            rainRoads =  parser.getRainInfo("highway_map_rain",refresh);
         }
         logger.info("Raining road size: " + rainRoads.size());
         JSONObject json = new JSONObject();
@@ -78,9 +78,9 @@ public class RainHandler extends ProxyHandler {
         }
         logger.info("points count: " + count);
         json.put("lines",lines);
-        json.put("status","ok");
+//        json.put("status","ok");
         String res = json.toString();
-        res = "/**/ typeof "+ jpc + " === 'function' && " + jpc + "(" + res + ");";
+//        res = "/**/ typeof "+ jpc + " === 'function' && " + jpc + "(" + res + ");";
         response(exchange,200,res);
     }
 

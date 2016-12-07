@@ -526,33 +526,37 @@ public class MapUtil {
         MysqlConnector mysqlConnector = new MysqlConnector();
         mysqlConnector.connSQL();
         DecimalFormat decimalFormat = new DecimalFormat(".0");
+        int count = 0;
+        String cmds = "";
         for(String key:gps_pinfo.keySet()){
             List<Point> points = gps_pinfo.get(key);
 //            List<String> cmds = new ArrayList<>();
-            int count = 0;
-            String cmds = "";
             for(Point point:points)
             {
                 String sql = prefix + point.getRainfall() + " where gps_lat=" + point.getPoint_x() + " and gps_lng=" + point.getPoint_y() + ";";
 //                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
                 cmds = cmds + sql;
                 count++;
-                if(count == 50){
+                if(count > 50){
                     mysqlConnector.insertSQL(cmds);
                     cmds = "";
                     count = 0;
                 }
             }
-            if(count>0){
+            if(count>50){
                 mysqlConnector.insertSQL(cmds);
+                cmds = "";
+                count = 0;
             }
 //            sql = sql.substring(0,sql.length()-1)+ ";";
-
+        }
+        if(count>0){
+            mysqlConnector.insertSQL(cmds);
         }
         if(mysqlConnector !=null){
             mysqlConnector.disconnSQL();
         }
-        System.out.println("Update gps_point_rain" + tableNum + " DONE!");
+//        System.out.println("Update gps_point_rain" + tableNum + " DONE!");
     }
 
     public static int getLevelForGps(Double pp) {
@@ -589,7 +593,7 @@ public class MapUtil {
                 int pid = rs.getInt("PID");
 
                 Point point = new Point(pid,rs.getDouble("lng"),rs.getDouble("lat"),0d,0d,0d,0,12);
-                List<Point> points = null;
+                List<Point> points;
                 int[] level = new int[12];
                 String pp = "rain_p";
                 for(int j=0;j<12;j++){
