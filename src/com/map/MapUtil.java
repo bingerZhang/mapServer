@@ -537,13 +537,13 @@ public class MapUtil {
 //                sql =  sql + " (" + point.getId() + "," + point.getPoint_x() + ","+ point.getPoint_y() +","+ point.getRainfall() + "),";
                 cmds = cmds + sql;
                 count++;
-                if(count > 50){
+                if(count > 100){
                     mysqlConnector.insertSQL(cmds);
                     cmds = "";
                     count = 0;
                 }
             }
-            if(count>50){
+            if(count>100){
                 mysqlConnector.insertSQL(cmds);
                 cmds = "";
                 count = 0;
@@ -599,7 +599,7 @@ public class MapUtil {
                 for(int j=0;j<12;j++){
                     String rskey = pp + j;
                     double rp = rs.getDouble(rskey);
-                    int level_p = getLevel(rp);
+                    int level_p = getLevelForGps(rp);
                     level[j]=level_p;
                 }
                 point.setLevel(level);

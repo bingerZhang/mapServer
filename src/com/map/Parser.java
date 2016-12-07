@@ -600,11 +600,13 @@ public class Parser {
             mysqlConnector.deleteSQL(deleteSql);
             mysqlConnector.insertSQL(insertSql);
         }
+        String deleteHighwayMapRain = "delete from highway_map_rain;";
         String generateSql = "insert into highway_map_rain\n" +
                 "select g1.id,g1.name,g1.pid PID,g1.lng,g1.lat,g1.rain rain_p0,g2.rain rain_p1,g3.rain rain_p2,g4.rain rain_p3,g5.rain rain_p4,g6.rain rain_p5,g7.rain rain_p6,g8.rain rain_p7,g9.rain rain_p8,g10.rain rain_p9,g11.rain rain_p10,g12.rain rain_p11\n" +
                 "from highway_gps_point_weather1 g1,highway_gps_point_weather2 g2,highway_gps_point_weather3 g3,highway_gps_point_weather4 g4,highway_gps_point_weather5 g5,highway_gps_point_weather6 g6,highway_gps_point_weather7 g7,\n" +
                 "highway_gps_point_weather8 g8,highway_gps_point_weather9 g9,highway_gps_point_weather10 g10,highway_gps_point_weather11 g11,highway_gps_point_weather12 g12 \n" +
                 "where g1.id = g2.id and  g1.id = g3.id and g1.id = g4.id and g1.id = g5.id and g1.id = g6.id and g1.id = g7.id and g1.id = g8.id and g1.id = g9.id and g1.id = g10.id and g1.id = g11.id and g1.id = g12.id";
+        mysqlConnector.deleteSQL(deleteHighwayMapRain);
         mysqlConnector.insertSQL(generateSql);
         mysqlConnector.disconnSQL();
     }
