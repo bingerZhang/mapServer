@@ -299,13 +299,12 @@ public class Parser {
         return true;
     }
 
-    public static void readtxtFile(String file, int tableNum) throws IOException {
+    public static void readtxtFile(String file, int tableNum,Map<String, List<Point>> listMap) throws IOException {
         InputStreamReader fr = new InputStreamReader(new FileInputStream(file));
         BufferedReader br = new BufferedReader(fr);
         String rec = null;// 一行
         String str;// 一个单元格
-        List<List<String>> listFile = new ArrayList<List<String>>();
-        Map<String, List<Point>> listMap = MapUtil.loadgpspointInfo2();
+        if(listMap==null||listMap.size()==0) listMap = MapUtil.loadgpspointInfo2();
         try {
             // 读取一行
             double lng_start = 70.0;
@@ -578,9 +577,10 @@ public class Parser {
             logger.debug("validate failed !");
             return;
         }
+        Map<String, List<Point>> listMap = new HashMap<>();
         for(int i=0;i<12;i++){
             String file = files.get(i);
-            readtxtFile(file,i+1);
+            readtxtFile(file,i+1,listMap);
         }
         updateHighwayGpsPointWeather();
 //        readtxtFile("D:/160831/grid24_2016083108.024", 1);
